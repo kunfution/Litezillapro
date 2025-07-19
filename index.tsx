@@ -57,6 +57,9 @@ const brushSizeInput = document.getElementById('brush-size') as HTMLInputElement
 const undoBtn = document.getElementById('undo-btn') as HTMLButtonElement;
 const redoBtn = document.getElementById('redo-btn') as HTMLButtonElement;
 const generateBgBtn = document.getElementById('generate-bg-btn') as HTMLButtonElement;
+const strokeSelectionBtn = document.getElementById('stroke-selection-btn') as HTMLButtonElement;
+const canvasPreview = document.getElementById('canvas-preview') as HTMLCanvasElement;
+const ctxPreview = canvasPreview?.getContext('2d');
 
 
 // --- APP STATE ---
@@ -92,6 +95,7 @@ function init() {
     colorDetailSlider.addEventListener('input', processImage);
     panModeBtn.addEventListener('click', togglePanMode);
     generateBgBtn.addEventListener('click', handleGenerateBackground);
+    strokeSelectionBtn.addEventListener('click', handleStrokeSelection);
 
     // Brush tool listeners
     brushToolSelect.addEventListener('change', handleToolChange);
@@ -153,7 +157,51 @@ function renderCanvas() {
             drawDot(ctx, x, y, color, dotRadius, spacing);
         }
     }
+    renderCanvasPreview();
 }
+
+/**
+ * Renders a small preview of the entire canvas.
+ */
+function renderCanvasPreview() {
+    if (!ctxPreview || !canvasPreview) return;
+
+    // Use the CSS dimensions of the preview canvas as the target viewport
+    const previewDisplayWidth = 160;
+    const previewDisplayHeight = 100;
+
+    // Calculate spacing to fit the grid within the viewport while maintaining aspect ratio
+    const spacingX = previewDisplayWidth / gridWidth;
+    const spacingY = previewDisplayHeight / gridHeight;
+    const spacing = Math.min(spacingX, spacingY);
+
+    // Set the canvas buffer size based on the calculated spacing.
+    // This gives us a higher resolution buffer for smooth circles.
+    const newCanvasWidth = gridWidth * spacing;
+    const newCanvasHeight = gridHeight * spacing;
+
+    if (canvasPreview.width !== newCanvasWidth) canvasPreview.width = newCanvasWidth;
+    if (canvasPreview.height !== newCanvasHeight) canvasPreview.height = newCanvasHeight;
+
+    ctxPreview.clearRect(0, 0, canvasPreview.width, canvasPreview.height);
+
+    const dotRadius = spacing * 0.4;
+
+    for (let y = 0; y < gridHeight; y++) {
+        for (let x = 0; x < gridWidth; x++) {
+            let color = pixelData[y]?.[x] || '#ffffff'; // Default to white for empty grid
+
+            // If there's a temporary background, show it over the mask
+            if (color === MASK_COLOR && generatedBackgroundData) {
+                color = generatedBackgroundData[y][x];
+            }
+
+            // Draw the dot using the shared function
+            drawDot(ctxPreview, x, y, color, dotRadius, spacing);
+        }
+    }
+}
+
 
 /**
  * Draws a single dot on a given canvas context.
@@ -171,7 +219,7 @@ function drawDot(
     let finalColor = color;
     if (color === MASK_COLOR) {
         finalColor = MASK_DISPLAY_COLOR;
-    } else if (color === LIMITED_PALETTE[0] && context === ctx) {
+    } else if (color === LIMITED_PALETTE[0]) {
         finalColor = CANVAS_DOT_COLOR_FOR_BLACK;
     }
 
@@ -477,6 +525,72 @@ function handleGenerateBackground() {
     }
 }
 
+function handleStrokeSelection() {
+    // A drawing action implicitly "accepts" the generated background.
+    commitGeneratedBackground();
+
+    let hasMask = false;
+    if (pixelData && pixelData.length > 0) {
+        for (let y = 0; y < gridHeight; y++) {
+            for (let x = 0; x < gridWidth; x++) {
+                if (pixelData[y]?.[x] === MASK_COLOR) {
+                    hasMask = true;
+                    break;
+                }
+            }
+            if (hasMask) break;
+        }
+    }
+
+    if (!hasMask) {
+        alert("Please create a mask selection first to use the stroke tool.");
+        return;
+    }
+
+    if (selectedColor === MASK_COLOR) {
+        alert("Please select a color for the stroke, not the mask tool itself.");
+        return;
+    }
+
+    saveState();
+
+    const borderPixels: { x: number; y: number }[] = [];
+    for (let y = 0; y < gridHeight; y++) {
+        for (let x = 0; x < gridWidth; x++) {
+            if (pixelData[y][x] === MASK_COLOR) {
+                const neighbors = [
+                    [x, y - 1], [x, y + 1], [x - 1, y], [x + 1, y]
+                ];
+
+                let isBorder = false;
+                for (const [nx, ny] of neighbors) {
+                    // A pixel is on the border if its neighbor is outside the canvas
+                    // or if the neighbor is not also a mask pixel.
+                    if (nx < 0 || nx >= gridWidth || ny < 0 || ny >= gridHeight || (pixelData[ny]?.[nx] !== MASK_COLOR)) {
+                        isBorder = true;
+                        break;
+                    }
+                }
+
+                if (isBorder) {
+                    borderPixels.push({ x, y });
+                }
+            }
+        }
+    }
+
+    if (borderPixels.length === 0) {
+        return;
+    }
+    
+    // Apply the stroke
+    for (const { x, y } of borderPixels) {
+        pixelData[y][x] = selectedColor;
+    }
+
+    renderCanvas();
+}
+
 
 function handleDownload() {
     // Commit any temporary background before downloading to get the final image.
@@ -487,7 +601,7 @@ function handleDownload() {
     if (!tempCtx) return;
 
     const pixelSize = 25;
-    const radius = pixelSize * 0.4;
+    const radius = pixelSize * 0.3; // Increased margin for exported image
 
     tempCanvas.width = gridWidth * pixelSize;
     tempCanvas.height = gridHeight * pixelSize;

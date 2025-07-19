@@ -66,6 +66,7 @@
                 <h3>Pattern Fill</h3>
                 <p class="description">Fill the background with a random geometric pattern. This feature works completely offline.</p>
                 <button id="generate-bg-btn" class="btn">Generate Background</button>
+                <button id="stroke-selection-btn" class="btn">Stroke Selection</button>
             </div>
 
             <div class="sidebar-section">
@@ -79,10 +80,14 @@
                 <canvas id="pixel-canvas"></canvas>
             </div>
              <div class="bottom-controls">
+                <div class="canvas-preview-wrapper preview-box">
+                    <p>Canvas Preview</p>
+                    <canvas id="canvas-preview"></canvas>
+                </div>
                 <div id="color-palette" class="color-palette">
                     <!-- Colors will be injected here -->
                 </div>
-                <div id="original-image-preview" class="original-image-preview hidden">
+                <div id="original-image-preview" class="original-image-preview preview-box hidden">
                     <p>Original Image</p>
                     <img id="source-image" src="" alt="Original source image">
                 </div>
