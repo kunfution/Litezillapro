@@ -1,0 +1,6 @@
+{
+  "name": "Pixel Art Creator",
+  "description": "An application to convert images into pixel art.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}
