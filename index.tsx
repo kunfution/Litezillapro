@@ -1,5 +1,3 @@
-
-
 // --- CONSTANTS ---
 const MASK_COLOR = 'mask';
 const MASK_DISPLAY_COLOR = '#888888';
@@ -992,29 +990,58 @@ function updateUndoRedoButtons() {
 function cacheLabPalette() {
     labPaletteCache = LIMITED_PALETTE.map(hex => {
         const rgb = hexToRgb(hex)!;
-        return { hex: hex, lab: rgbToLab(rgb.r, rgb.g, rgb.b) };
+        const lab = rgbToLab(rgb.r, rgb.g, rgb.b);
+        return { hex, lab };
     });
 }
 
+/**
+ * Finds the closest color in the palette. This version uses a targeted approach
+ * for blue hues to prevent dark blues from matching black, without affecting other colors.
+ */
 function findClosestColor(r: number, g: number, b: number): string {
     const inputLab = rgbToLab(r, g, b);
-    let closestColor = labPaletteCache[0].hex;
+    const inputHsl = rgbToHsl(r, g, b);
+
+    // Blue-ish hues are roughly between 180 (cyan-ish) and 270 (purple-blue)
+    const isInputBlueHue = inputHsl.h >= 180 && inputHsl.h <= 270;
+
+    let closestColor = '';
     let minDistance = Infinity;
 
+    if (labPaletteCache.length === 0) return '#ffffff';
+
     for (const paletteColor of labPaletteCache) {
-        const distance = Math.sqrt(
-            Math.pow(inputLab.l - paletteColor.lab.l, 2) +
-            Math.pow(inputLab.a - paletteColor.lab.a, 2) +
-            Math.pow(inputLab.b - paletteColor.lab.b, 2)
-        );
+        const dL = inputLab.l - paletteColor.lab.l;
+        const dA = inputLab.a - paletteColor.lab.a;
+        const dB = inputLab.b - paletteColor.lab.b;
+        
+        let distance;
+        
+        // Is the palette color we're checking against the main "Blue"?
+        const paletteIsBlue = paletteColor.hex === '#0f49ff';
+
+        // If the input color is a shade of blue AND we are comparing it against the
+        // palette's official blue, we heavily discount the lightness difference.
+        // This makes it much more likely that a dark navy blue will match the bright
+        // palette blue instead of matching black.
+        if (isInputBlueHue && paletteIsBlue) {
+            const lightnessWeight = 0.2; // Drastically reduce penalty for brightness difference
+            distance = Math.sqrt(Math.pow(dL * lightnessWeight, 2) + Math.pow(dA, 2) + Math.pow(dB, 2));
+        } else {
+            // Use the standard formula for all other color comparisons.
+            distance = Math.sqrt(dL * dL + dA * dA + dB * dB);
+        }
 
         if (distance < minDistance) {
             minDistance = distance;
             closestColor = paletteColor.hex;
         }
     }
-    return closestColor;
+    
+    return closestColor || labPaletteCache[0].hex;
 }
+
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -1022,6 +1049,25 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
         ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) }
         : null;
 }
+
+function rgbToHsl(r: number, g: number, b: number): { h: number, s: number, l: number } {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0, s = 0, l = (max + min) / 2;
+
+    if (max !== min) {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+            case g: h = (b - r) / d + 2; break;
+            case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+    }
+    return { h: h * 360, s: s, l: l };
+}
+
 
 function rgbToLab(r: number, g: number, b: number): { l: number; a: number; b: number } {
     let R = r / 255, G = g / 255, B = b / 255;
