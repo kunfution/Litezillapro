@@ -36,8 +36,9 @@ const SMALL_CIRCLE_PATTERNS = {
     5: [[0,2],[1,1],[1,2],[1,3],[2,0],[2,1],[2,2],[2,3],[2,4],[3,1],[3,2],[3,3],[4,2]],
 };
 
+// Redesigned 3x5 pixel font for better legibility + lowercase
 const PIXEL_FONT: { [key: string]: number[][] } = {
-    'A': [[0,1,0],[1,0,1],[1,1,1],[1,0,1],[1,0,1]],
+    'A': [[1,1,1],[1,0,1],[1,1,1],[1,0,1],[1,0,1]],
     'B': [[1,1,0],[1,0,1],[1,1,0],[1,0,1],[1,1,0]],
     'C': [[0,1,1],[1,0,0],[1,0,0],[1,0,0],[0,1,1]],
     'D': [[1,1,0],[1,0,1],[1,0,1],[1,0,1],[1,1,0]],
@@ -49,20 +50,46 @@ const PIXEL_FONT: { [key: string]: number[][] } = {
     'J': [[0,0,1],[0,0,1],[0,0,1],[1,0,1],[0,1,0]],
     'K': [[1,0,1],[1,1,0],[1,1,0],[1,0,1],[1,0,1]],
     'L': [[1,0,0],[1,0,0],[1,0,0],[1,0,0],[1,1,1]],
-    'M': [[1,0,1],[1,1,1],[1,1,1],[1,0,1],[1,0,1]],
-    'N': [[1,1,1],[1,0,1],[1,0,1],[1,0,1],[1,0,1]],
+    'M': [[1,0,1],[1,1,1],[1,0,1],[1,0,1],[1,0,1]],
+    'N': [[1,0,1],[1,1,1],[1,1,1],[1,0,1],[1,0,1]],
     'O': [[0,1,0],[1,0,1],[1,0,1],[1,0,1],[0,1,0]],
     'P': [[1,1,0],[1,0,1],[1,1,0],[1,0,0],[1,0,0]],
     'Q': [[0,1,0],[1,0,1],[1,0,1],[0,1,1],[0,0,1]],
     'R': [[1,1,0],[1,0,1],[1,1,0],[1,0,1],[1,0,1]],
     'S': [[0,1,1],[1,0,0],[0,1,0],[0,0,1],[1,1,0]],
     'T': [[1,1,1],[0,1,0],[0,1,0],[0,1,0],[0,1,0]],
-    'U': [[1,0,1],[1,0,1],[1,0,1],[1,0,1],[0,1,0]],
+    'U': [[1,0,1],[1,0,1],[1,0,1],[1,0,1],[0,1,1]],
     'V': [[1,0,1],[1,0,1],[1,0,1],[0,1,0],[0,1,0]],
     'W': [[1,0,1],[1,0,1],[1,1,1],[1,1,1],[1,0,1]],
-    'X': [[1,0,1],[1,0,1],[0,1,0],[1,0,1],[1,0,1]],
-    'Y': [[1,0,1],[1,0,1],[0,1,0],[0,1,0],[0,1,0]],
+    'X': [[1,0,1],[0,1,0],[0,1,0],[0,1,0],[1,0,1]],
+    'Y': [[1,0,1],[1,0,1],[0,1,1],[0,1,0],[0,1,0]],
     'Z': [[1,1,1],[0,0,1],[0,1,0],[1,0,0],[1,1,1]],
+    'a': [[0,0,0],[0,1,0],[1,1,1],[1,0,1],[0,1,1]],
+    'b': [[1,0,0],[1,0,0],[1,1,0],[1,0,1],[1,1,0]],
+    'c': [[0,0,0],[0,1,1],[1,0,0],[1,0,0],[0,1,1]],
+    'd': [[0,0,1],[0,0,1],[0,1,1],[1,0,1],[0,1,1]],
+    'e': [[0,0,0],[0,1,0],[1,1,1],[1,0,0],[0,1,1]],
+    'f': [[0,1,0],[1,0,1],[1,1,0],[1,0,0],[1,0,0]],
+    'g': [[0,1,1],[1,0,1],[0,1,1],[0,0,1],[0,1,0]],
+    'h': [[1,0,0],[1,0,0],[1,1,0],[1,0,1],[1,0,1]],
+    'i': [[0,1,0],[0,0,0],[0,1,0],[0,1,0],[0,1,0]],
+    'j': [[0,0,1],[0,0,0],[0,1,1],[0,1,1],[1,1,0]],
+    'k': [[1,0,0],[1,0,1],[1,1,0],[1,1,0],[1,0,1]],
+    'l': [[1,1,0],[0,1,0],[0,1,0],[0,1,0],[0,1,1]],
+    'm': [[0,0,0],[1,1,1],[1,0,1],[1,0,1],[1,0,1]],
+    'n': [[0,0,0],[1,1,0],[1,0,1],[1,0,1],[1,0,1]],
+    'o': [[0,0,0],[0,1,0],[1,0,1],[1,0,1],[0,1,0]],
+    'p': [[0,0,0],[1,1,0],[1,0,1],[1,1,0],[1,0,0]],
+    'q': [[0,0,0],[0,1,1],[1,0,1],[0,1,1],[0,0,1]],
+    'r': [[0,0,0],[1,1,0],[1,0,1],[1,0,0],[1,0,0]],
+    's': [[0,0,0],[0,1,1],[1,0,0],[0,0,1],[1,1,0]],
+    't': [[1,0,0],[1,1,1],[1,0,0],[1,0,1],[0,1,0]],
+    'u': [[0,0,0],[1,0,1],[1,0,1],[1,0,1],[0,1,1]],
+    'v': [[0,0,0],[1,0,1],[1,0,1],[1,0,1],[0,1,0]],
+    'w': [[0,0,0],[1,0,1],[1,0,1],[1,1,1],[1,1,1]],
+    'x': [[0,0,0],[1,0,1],[0,1,0],[1,0,1],[0,0,0]],
+    'y': [[1,0,1],[1,0,1],[0,1,1],[0,0,1],[0,1,0]],
+    'z': [[0,0,0],[1,1,1],[0,1,0],[1,0,0],[1,1,1]],
     '0': [[0,1,0],[1,0,1],[1,1,1],[1,0,1],[0,1,0]],
     '1': [[0,1,0],[1,1,0],[0,1,0],[0,1,0],[1,1,1]],
     '2': [[1,1,0],[0,0,1],[0,1,0],[1,0,0],[1,1,1]],
@@ -93,6 +120,7 @@ const originalImagePreview = document.getElementById('original-image-preview') a
 const sourceImageEl = document.getElementById('source-image') as HTMLImageElement;
 const colorPaletteContainer = document.getElementById('color-palette') as HTMLDivElement;
 const downloadBtn = document.getElementById('download-btn') as HTMLButtonElement;
+const downloadSvgBtn = document.getElementById('download-svg-btn') as HTMLButtonElement;
 const saveProjectBtn = document.getElementById('save-project-btn') as HTMLButtonElement;
 const scaleSlider = document.getElementById('scale-slider') as HTMLInputElement;
 const colorDetailSlider = document.getElementById('color-detail-slider') as HTMLInputElement;
@@ -115,12 +143,13 @@ const hotkeyPopover = document.getElementById('hotkey-popover') as HTMLDivElemen
 
 // --- APP STATE ---
 let originalImage: HTMLImageElement | null = null;
-let gridWidth = 51;
-let gridHeight = 26;
-let pixelData: string[][] = []; // 2D array of hex color strings
+let gridWidth = 51; // Viewport width
+let gridHeight = 26; // Viewport height
+let pixelData = new Map<string, string>(); // Use a Map for a sparse, infinite grid. Key: "x,y", Value: hex color
+let artboardOffset = { x: 0, y: 0 }; // Viewport's top-left corner on the infinite artboard.
 let generatedBackgroundData: string[][] | null = null; // Temp layer for masked generation
-let historyStack: string[][][] = [];
-let redoStack: string[][][] = [];
+let historyStack: { pixelData: Map<string, string>; artboardOffset: { x: number; y: number } }[] = [];
+let redoStack: { pixelData: Map<string, string>; artboardOffset: { x: number; y: number } }[] = [];
 const MAX_HISTORY_SIZE = 50;
 let selectedColor: string = LIMITED_PALETTE[1]; // Default to white
 let resizeAnimationFrameId: number | null = null;
@@ -144,6 +173,7 @@ function init() {
     uploadInput.addEventListener('change', handleImageUpload);
     sizeSelect.addEventListener('change', handleSizeChange);
     downloadBtn.addEventListener('click', handleDownload);
+    downloadSvgBtn.addEventListener('click', handleDownloadSVG);
     saveProjectBtn.addEventListener('click', handleSaveProject);
     scaleSlider.addEventListener('input', handleScaleChange);
     colorDetailSlider.addEventListener('input', processImage);
@@ -212,9 +242,9 @@ function getSpacing(): number {
     return Math.min(spacingX, spacingY);
 }
 
+
 /**
- * Converts screen coordinates (from a mouse event) to grid cell coordinates.
- * The canvas is now the exact size of the artboard, so the calculation is direct.
+ * Converts screen coordinates to absolute artboard grid coordinates.
  */
 function screenToGrid(event: MouseEvent): {x: number, y: number} | null {
     if (!canvas) return null;
@@ -225,21 +255,22 @@ function screenToGrid(event: MouseEvent): {x: number, y: number} | null {
     const canvasX = event.clientX - rect.left;
     const canvasY = event.clientY - rect.top;
 
-    const gridX = Math.floor(canvasX / spacing);
-    const gridY = Math.floor(canvasY / spacing);
+    // The grid cell on the visible canvas
+    const viewGridX = Math.floor(canvasX / spacing);
+    const viewGridY = Math.floor(canvasY / spacing);
 
     // Check if the coordinates are within the grid bounds
-    if (gridX < 0 || gridX >= gridWidth || gridY < 0 || gridY >= gridHeight) {
+    if (viewGridX < 0 || viewGridX >= gridWidth || viewGridY < 0 || viewGridY >= gridHeight) {
         return null;
     }
-
-    return { x: gridX, y: gridY };
+    
+    // Return the absolute coordinate on the infinite artboard
+    return { x: viewGridX + artboardOffset.x, y: viewGridY + artboardOffset.y };
 }
 
 
 /**
- * Main render function. Resizes the canvas element to be the exact artboard size
- * and then draws the grid. The border and background are handled by CSS.
+ * Main render function. Renders the current viewport of the artboard.
  */
 function renderCanvas() {
     if (!ctx || !canvasWrapper) return;
@@ -247,42 +278,36 @@ function renderCanvas() {
 
     const spacing = getSpacing();
     
-    // Calculate final dimensions for the canvas element
     const artboardWidth = gridWidth * spacing;
     const artboardHeight = gridHeight * spacing;
     
-    // Set canvas element dimensions (both buffer and style)
     if (canvas.width !== artboardWidth) canvas.width = artboardWidth;
     if (canvas.height !== artboardHeight) canvas.height = artboardHeight;
-    // The flexbox wrapper will handle centering the element with this style.
     canvas.style.width = `${artboardWidth}px`;
     canvas.style.height = `${artboardHeight}px`;
 
-    // Clear canvas. The background color is now handled by CSS on the canvas element itself.
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const dotRadius = spacing * 0.35;
 
-    // Calculate temporary pan in grid cells for preview during a pan gesture
-    const panCellsX = isDragging && isPanMode ? Math.round(panOffset.x / spacing) : 0;
-    const panCellsY = isDragging && isPanMode ? Math.round(panOffset.y / spacing) : 0;
+    // Pan preview offset in grid cells
+    const panPreviewX = isDragging && isPanMode ? Math.round(panOffset.x / spacing) : 0;
+    const panPreviewY = isDragging && isPanMode ? Math.round(panOffset.y / spacing) : 0;
 
-    for (let y = 0; y < gridHeight; y++) { // y is the destination cell row
-        for (let x = 0; x < gridWidth; x++) { // x is the destination cell column
+    for (let y = 0; y < gridHeight; y++) { // y is the viewport row
+        for (let x = 0; x < gridWidth; x++) { // x is the viewport col
             
-            // Find the source pixel in our data grid
-            const sourceX = x - panCellsX;
-            const sourceY = y - panCellsY;
+            // Find the source pixel on the infinite artboard
+            const sourceX = x + artboardOffset.x - panPreviewX;
+            const sourceY = y + artboardOffset.y - panPreviewY;
 
-            let color = pixelData[sourceY]?.[sourceX] || '#ffffff';
+            let color = getPixel(sourceX, sourceY);
 
             // If there's a temporary background, show it over the mask
-            // Note: the temporary background itself does not pan. It becomes pannable once committed.
             if (color === MASK_COLOR && generatedBackgroundData) {
-                 color = generatedBackgroundData[sourceY]?.[sourceX] || MASK_COLOR;
+                 color = generatedBackgroundData[y]?.[x] || MASK_COLOR;
             }
 
-            // Draw the dot. No offsets are needed as the canvas is the artboard.
             drawDot(ctx, x, y, color, dotRadius, spacing);
         }
     }
@@ -292,46 +317,49 @@ function renderCanvas() {
 }
 
 /**
- * Renders a small preview of the entire canvas. This always shows the committed state.
+ * Renders a small preview of the current viewport.
  */
 function renderCanvasPreview() {
-    if (!ctxPreview || !canvasPreview) return;
+    if (!ctxPreview || !canvasPreview) { return; };
 
-    // Use the CSS dimensions of the preview canvas as the target viewport
+    // The art to be previewed is exactly what's in the viewport.
+    const artWidth = gridWidth;
+    const artHeight = gridHeight;
+
+    // Calculate spacing to fit viewport in preview area
     const previewDisplayWidth = 160;
     const previewDisplayHeight = 100;
-
-    // Calculate spacing to fit the grid within the viewport while maintaining aspect ratio
-    const spacingX = previewDisplayWidth / gridWidth;
-    const spacingY = previewDisplayHeight / gridHeight;
+    const spacingX = previewDisplayWidth / artWidth;
+    const spacingY = previewDisplayHeight / artHeight;
     const spacing = Math.min(spacingX, spacingY);
 
-    // Set the canvas buffer size based on the calculated spacing.
-    // This gives us a higher resolution buffer for smooth circles.
-    const newCanvasWidth = gridWidth * spacing;
-    const newCanvasHeight = gridHeight * spacing;
-
+    const newCanvasWidth = artWidth * spacing;
+    const newCanvasHeight = artHeight * spacing;
     if (canvasPreview.width !== newCanvasWidth) canvasPreview.width = newCanvasWidth;
     if (canvasPreview.height !== newCanvasHeight) canvasPreview.height = newCanvasHeight;
-
     ctxPreview.clearRect(0, 0, canvasPreview.width, canvasPreview.height);
-
     const dotRadius = spacing * 0.35;
 
-    for (let y = 0; y < gridHeight; y++) {
-        for (let x = 0; x < gridWidth; x++) {
-            let color = pixelData[y]?.[x] || '#ffffff'; // Default to white for empty grid
-
-            // If there's a temporary background, show it over the mask
+    // Draw the art by iterating through the viewport dimensions
+    for (let y = 0; y < artHeight; y++) {
+        for (let x = 0; x < artWidth; x++) {
+            // Get the pixel from the main artboard corresponding to the viewport cell
+            const artX = x + artboardOffset.x;
+            const artY = y + artboardOffset.y;
+            let color = getPixel(artX, artY);
+            
+            // If there's a temporary background, show it in the preview.
             if (color === MASK_COLOR && generatedBackgroundData) {
-                color = generatedBackgroundData[y][x];
+                // `generatedBackgroundData` is viewport-relative (y, x).
+                color = generatedBackgroundData[y]?.[x] || MASK_COLOR;
             }
-
-            // Draw the dot using the shared function (no offset for preview)
+            
+            // The drawing coordinates on the preview canvas are the loop iterators (x, y)
             drawDot(ctxPreview, x, y, color, dotRadius, spacing);
         }
     }
 }
+
 
 
 /**
@@ -465,14 +493,14 @@ function handleImageUpload(event: Event) {
                 // Restore state from file
                 gridWidth = projectData.gridWidth;
                 gridHeight = projectData.gridHeight;
-                pixelData = projectData.pixelData;
+                pixelData = new Map(projectData.pixelData);
+                artboardOffset = projectData.artboardOffset || {x: 0, y: 0};
                 
                 // Update UI to match loaded state
                 const sizeValue = `${gridWidth}x${gridHeight}`;
                 if ([...sizeSelect.options].some(opt => opt.value === sizeValue)) {
                     sizeSelect.value = sizeValue;
                 } else {
-                     // Optional: handle custom sizes not in dropdown, for now, we just update the internal state
                      console.warn(`Loaded a custom grid size (${sizeValue}) that is not in the dropdown list.`);
                 }
 
@@ -524,7 +552,7 @@ function handleImageUpload(event: Event) {
 function handleSizeChange() {
     cancelTextPlacementMode();
     updateGridSize();
-    pixelData = [];
+    pixelData.clear();
     generatedBackgroundData = null; // Clear temp background
     originalImage = null;
     originalImagePreview.classList.add('hidden');
@@ -558,9 +586,6 @@ function handleMouseDown(event: MouseEvent) {
     saveState();
     commitGeneratedBackground();
 
-    if (pixelData.length === 0) {
-        pixelData = Array.from({ length: gridHeight }, () => Array(gridWidth).fill('#ffffff'));
-    }
     applyToolAt(event);
 }
 
@@ -585,15 +610,13 @@ function handleMouseUp() {
 }
 
 function handleEyedropper(event: MouseEvent) {
-    if (!ctx) return;
     const coords = screenToGrid(event);
     if (!coords) return;
     
     const { x, y } = coords;
-    const pickedColor = pixelData[y]?.[x];
+    const pickedColor = getPixel(x, y);
 
     if (pickedColor) {
-        // Check if the picked color is part of our swatch list
         if ([...LIMITED_PALETTE, MASK_COLOR].includes(pickedColor)) {
             selectColor(pickedColor);
         }
@@ -602,7 +625,6 @@ function handleEyedropper(event: MouseEvent) {
 
 
 function applyToolAt(event: MouseEvent) {
-    if (!ctx) return;
     const coords = screenToGrid(event);
     if (!coords) return;
 
@@ -913,16 +935,13 @@ function handleGenerateBackground() {
     try {
         setTimeout(() => {
             let hasMask = false;
-            if (pixelData && pixelData.length > 0) {
-                 for (let y = 0; y < gridHeight; y++) {
-                    for (let x = 0; x < gridWidth; x++) {
-                        if (pixelData[y]?.[x] === MASK_COLOR) {
-                            hasMask = true;
-                            break;
-                        }
+            if (pixelData.size > 0) {
+                 for (const color of pixelData.values()) {
+                    if (color === MASK_COLOR) {
+                        hasMask = true;
+                        break;
                     }
-                    if(hasMask) break;
-                }
+                 }
             }
 
             const newPattern: string[][] = Array.from({ length: gridHeight }, () => Array(gridWidth).fill('#ffffff'));
@@ -930,15 +949,16 @@ function handleGenerateBackground() {
             generator(newPattern);
 
             if (hasMask) {
-                // With a mask, we don't modify pixelData. We just set the temporary overlay.
-                // This allows generating again without losing the mask.
                 generatedBackgroundData = newPattern;
             } else {
-                // No mask, this is a destructive action. Save the previous state.
-                // Discard any uncommitted generated background as we are about to overwrite everything.
                 generatedBackgroundData = null;
                 saveState();
-                pixelData = newPattern;
+                pixelData.clear();
+                for (let y = 0; y < gridHeight; y++) {
+                    for (let x = 0; x < gridWidth; x++) {
+                        setPixel(x + artboardOffset.x, y + artboardOffset.y, newPattern[y][x]);
+                    }
+                }
             }
 
             renderCanvas();
@@ -956,19 +976,13 @@ function handleGenerateBackground() {
 
 function handleStrokeSelection() {
     cancelTextPlacementMode();
-    // A drawing action implicitly "accepts" the generated background.
     commitGeneratedBackground();
 
     let hasMask = false;
-    if (pixelData && pixelData.length > 0) {
-        for (let y = 0; y < gridHeight; y++) {
-            for (let x = 0; x < gridWidth; x++) {
-                if (pixelData[y]?.[x] === MASK_COLOR) {
-                    hasMask = true;
-                    break;
-                }
-            }
-            if (hasMask) break;
+    for (const color of pixelData.values()) {
+        if (color === MASK_COLOR) {
+            hasMask = true;
+            break;
         }
     }
 
@@ -985,37 +999,31 @@ function handleStrokeSelection() {
     saveState();
 
     const borderPixels: { x: number; y: number }[] = [];
-    for (let y = 0; y < gridHeight; y++) {
-        for (let x = 0; x < gridWidth; x++) {
-            if (pixelData[y][x] === MASK_COLOR) {
-                const neighbors = [
-                    [x, y - 1], [x, y + 1], [x - 1, y], [x + 1, y]
-                ];
+    for (const [key, color] of pixelData.entries()) {
+        if (color === MASK_COLOR) {
+            const [x, y] = key.split(',').map(Number);
+            const neighbors = [
+                [x, y - 1], [x, y + 1], [x - 1, y], [x + 1, y]
+            ];
 
-                let isBorder = false;
-                for (const [nx, ny] of neighbors) {
-                    // A pixel is on the border if its neighbor is outside the canvas
-                    // or if the neighbor is not also a mask pixel.
-                    if (nx < 0 || nx >= gridWidth || ny < 0 || ny >= gridHeight || (pixelData[ny]?.[nx] !== MASK_COLOR)) {
-                        isBorder = true;
-                        break;
-                    }
+            let isBorder = false;
+            for (const [nx, ny] of neighbors) {
+                if (getPixel(nx, ny) !== MASK_COLOR) {
+                    isBorder = true;
+                    break;
                 }
+            }
 
-                if (isBorder) {
-                    borderPixels.push({ x, y });
-                }
+            if (isBorder) {
+                borderPixels.push({ x, y });
             }
         }
     }
 
-    if (borderPixels.length === 0) {
-        return;
-    }
+    if (borderPixels.length === 0) return;
     
-    // Apply the stroke
     for (const { x, y } of borderPixels) {
-        pixelData[y][x] = selectedColor;
+        setPixel(x, y, selectedColor);
     }
 
     renderCanvas();
@@ -1023,7 +1031,6 @@ function handleStrokeSelection() {
 
 
 function placeTextOnCanvas(event: MouseEvent) {
-    if (!ctx) return;
     const coords = screenToGrid(event);
     if (!coords) return;
 
@@ -1049,18 +1056,12 @@ function drawTextAt(startX: number, startY: number) {
         return;
     }
 
-    // A drawing action implicitly "accepts" the generated background.
     saveState();
     commitGeneratedBackground();
 
-    if (pixelData.length === 0) {
-        pixelData = Array.from({ length: gridHeight }, () => Array(gridWidth).fill('#ffffff'));
-    }
-
-    const textToDraw = text.toUpperCase();
     let currentX = startX;
 
-    for (const char of textToDraw) {
+    for (const char of text) {
         const charBitmap = PIXEL_FONT[char] || PIXEL_FONT['?'];
         const charHeight = charBitmap.length;
         const charWidth = charBitmap[0].length;
@@ -1068,21 +1069,16 @@ function drawTextAt(startX: number, startY: number) {
         for (let y = 0; y < charHeight; y++) {
             for (let x = 0; x < charWidth; x++) {
                 if (charBitmap[y][x] === 1) {
-                    // This pixel is 'on'. Draw a scaled block for it.
                     for (let scaleY = 0; scaleY < textSize; scaleY++) {
                         for (let scaleX = 0; scaleX < textSize; scaleX++) {
                             const gridX = currentX + (x * textSize) + scaleX;
                             const gridY = startY + (y * textSize) + scaleY;
-                            
-                            if (gridX >= 0 && gridX < gridWidth && gridY >= 0 && gridY < gridHeight) {
-                                pixelData[gridY][gridX] = selectedColor;
-                            }
+                            setPixel(gridX, gridY, selectedColor);
                         }
                     }
                 }
             }
         }
-        // Move to the next character position (width of current char + 1 pixel for spacing, all scaled)
         currentX += (charWidth * textSize) + (1 * textSize);
     }
 
@@ -1091,35 +1087,56 @@ function drawTextAt(startX: number, startY: number) {
 
 
 function handleDownload() {
-    // Commit any temporary background before downloading to get the final image.
     commitGeneratedBackground();
+
+    // Check if there's any non-masked art in the current viewport to export.
+    let hasArtInView = false;
+    for (let y = 0; y < gridHeight; y++) {
+        for (let x = 0; x < gridWidth; x++) {
+            if (getPixel(x + artboardOffset.x, y + artboardOffset.y) !== MASK_COLOR) {
+                hasArtInView = true;
+                break;
+            }
+        }
+        if (hasArtInView) break;
+    }
+
+    if (!hasArtInView) {
+        alert("There is no visible artwork in the current view to export. Try removing the mask or drawing something.");
+        return;
+    }
 
     const tempCanvas = document.createElement('canvas');
     const tempCtx = tempCanvas.getContext('2d');
     if (!tempCtx) return;
 
-    const pixelSize = 25;
-    const radius = pixelSize * 0.3; // Increased margin for exported image
+    const pixelSize = 25; // Size of each dot in pixels
+    const margin = pixelSize; // Margin around the artwork
+    const artWidth = gridWidth * pixelSize;
+    const artHeight = gridHeight * pixelSize;
 
-    tempCanvas.width = gridWidth * pixelSize;
-    tempCanvas.height = gridHeight * pixelSize;
+    tempCanvas.width = artWidth + margin * 2;
+    tempCanvas.height = artHeight + margin * 2;
+    const radius = pixelSize * 0.35;
 
     tempCtx.fillStyle = '#000000';
     tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
 
-    const dataToRender = pixelData.length > 0
-        ? pixelData
-        : Array.from({ length: gridHeight }, () => Array(gridWidth).fill('#ffffff'));
-
-
+    // Iterate through the current viewport, not the entire artboard
     for (let y = 0; y < gridHeight; y++) {
         for (let x = 0; x < gridWidth; x++) {
-            const color = dataToRender[y]?.[x];
-            // Skip rendering for mask color to make it transparent
-            if (color && color !== MASK_COLOR) {
+            const artX = x + artboardOffset.x;
+            const artY = y + artboardOffset.y;
+            const color = getPixel(artX, artY);
+
+            if (color !== MASK_COLOR) {
+                // Calculate position on the temp canvas based on viewport coordinates (x, y)
+                const drawX = x * pixelSize + margin;
+                const drawY = y * pixelSize + margin;
+
                 tempCtx.beginPath();
-                tempCtx.arc(x * pixelSize + (pixelSize / 2), y * pixelSize + (pixelSize / 2), radius, 0, 2 * Math.PI, false);
-                tempCtx.fillStyle = color; // Use original black for download
+                tempCtx.arc(drawX + (pixelSize / 2), drawY + (pixelSize / 2), radius, 0, 2 * Math.PI, false);
+                tempCtx.fillStyle = color;
                 tempCtx.fill();
             }
         }
@@ -1132,11 +1149,72 @@ function handleDownload() {
     link.click();
 }
 
-function handleSaveProject() {
-    // Commit any temporary background before saving
+function handleDownloadSVG() {
     commitGeneratedBackground();
 
-    if (pixelData.length === 0) {
+    // Check if there's any non-masked art in the current viewport to export.
+    let hasArtInView = false;
+    for (let y = 0; y < gridHeight; y++) {
+        for (let x = 0; x < gridWidth; x++) {
+            if (getPixel(x + artboardOffset.x, y + artboardOffset.y) !== MASK_COLOR) {
+                hasArtInView = true;
+                break;
+            }
+        }
+        if (hasArtInView) break;
+    }
+
+    if (!hasArtInView) {
+        alert("There is no visible artwork in the current view to export. Try removing the mask or drawing something.");
+        return;
+    }
+
+    const pixelSize = 10; // Each "pixel" in our art will be 10x10 units in the SVG
+    const radius = pixelSize * 0.35;
+    const margin = pixelSize;
+
+    const artWidth = gridWidth * pixelSize;
+    const artHeight = gridHeight * pixelSize;
+    const totalWidth = artWidth + margin * 2;
+    const totalHeight = artHeight + margin * 2;
+
+    let svgContent = `<svg width="${totalWidth}" height="${totalHeight}" viewBox="0 0 ${totalWidth} ${totalHeight}" xmlns="http://www.w3.org/2000/svg">\n`;
+    svgContent += `  <rect width="100%" height="100%" fill="#000000" />\n`;
+
+    // Iterate through the current viewport
+    for (let y = 0; y < gridHeight; y++) {
+        for (let x = 0; x < gridWidth; x++) {
+            const artX = x + artboardOffset.x;
+            const artY = y + artboardOffset.y;
+            const color = getPixel(artX, artY);
+
+            if (color !== MASK_COLOR) {
+                // Calculate center based on viewport coords (x, y)
+                const cx = x * pixelSize + (pixelSize / 2) + margin;
+                const cy = y * pixelSize + (pixelSize / 2) + margin;
+                
+                svgContent += `  <circle cx="${cx}" cy="${cy}" r="${radius}" fill="${color}" />\n`;
+            }
+        }
+    }
+    
+    svgContent += '</svg>';
+
+    const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.download = 'pixel-art.svg';
+    link.href = url;
+    link.click();
+    
+    URL.revokeObjectURL(url);
+}
+
+function handleSaveProject() {
+    commitGeneratedBackground();
+
+    if (pixelData.size === 0) {
         alert("There is nothing to save. Create some art first!");
         return;
     }
@@ -1144,7 +1222,8 @@ function handleSaveProject() {
     const projectData = {
         gridWidth,
         gridHeight,
-        pixelData,
+        artboardOffset,
+        pixelData: Array.from(pixelData.entries()),
     };
 
     const jsonString = JSON.stringify(projectData);
@@ -1191,16 +1270,15 @@ function handlePanStart(event: MouseEvent) {
     isDragging = true;
     dragStart = { x: event.clientX, y: event.clientY };
     canvas.style.cursor = 'grabbing';
+    generatedBackgroundData = null; // Cancel temp background on pan
 }
 
 function handlePanMove(event: MouseEvent) {
     if (!isDragging || !isPanMode) return;
     
-    // Calculate total offset from the gesture's starting point for smooth panning
     panOffset.x = event.clientX - dragStart.x;
     panOffset.y = event.clientY - dragStart.y;
     
-    // Request a render for the preview
     if (resizeAnimationFrameId) {
         window.cancelAnimationFrame(resizeAnimationFrameId);
     }
@@ -1216,33 +1294,17 @@ function handlePanEnd() {
     const panCellsX = Math.round(panOffset.x / spacing);
     const panCellsY = Math.round(panOffset.y / spacing);
 
-    // If there was no significant pan, just reset and redraw
     if (panCellsX === 0 && panCellsY === 0) {
         panOffset = { x: 0, y: 0 };
         renderCanvas();
         return;
     }
     
-    // Panning is a modification, so commit temp background and save state for undo
-    commitGeneratedBackground();
-    saveState();
-
-    const newPixelData = Array.from({ length: gridHeight }, () => Array(gridWidth).fill('#ffffff'));
-
-    for (let y = 0; y < gridHeight; y++) {
-        for (let x = 0; x < gridWidth; x++) {
-            const newX = x + panCellsX;
-            const newY = y + panCellsY;
-
-            if (newX >= 0 && newX < gridWidth && newY >= 0 && newY < gridHeight) {
-                // Copy pixel from old location to new location
-                newPixelData[newY][newX] = pixelData[y][x];
-            }
-        }
-    }
+    saveState(); // Save state before the pan is committed
     
-    // Update main data with the shifted data
-    pixelData = newPixelData;
+    // Non-destructive pan: update the artboard offset
+    artboardOffset.x -= panCellsX;
+    artboardOffset.y -= panCellsY;
 
     // Reset pan offset and render the final committed state
     panOffset = { x: 0, y: 0 };
@@ -1253,9 +1315,17 @@ function handleUndo() {
     cancelTextPlacementMode();
     if (historyStack.length === 0) return;
     generatedBackgroundData = null; // Clear temp background when undoing
-    redoStack.push(pixelData.map(row => [...row]));
+    
+    const currentState = {
+        pixelData: new Map(pixelData),
+        artboardOffset: { ...artboardOffset }
+    };
+    redoStack.push(currentState);
+
     const previousState = historyStack.pop()!;
-    pixelData = previousState.map(row => [...row]);
+    pixelData = new Map(previousState.pixelData);
+    artboardOffset = { ...previousState.artboardOffset };
+
     renderCanvas();
     updateUndoRedoButtons();
 }
@@ -1264,12 +1334,19 @@ function handleRedo() {
     cancelTextPlacementMode();
     if (redoStack.length === 0) return;
     generatedBackgroundData = null; // Clear temp background when redoing
-    historyStack.push(pixelData.map(row => [...row]));
+    
+    const currentState = {
+        pixelData: new Map(pixelData),
+        artboardOffset: { ...artboardOffset }
+    };
+    historyStack.push(currentState);
     if (historyStack.length > MAX_HISTORY_SIZE) {
         historyStack.shift();
     }
+    
     const nextState = redoStack.pop()!;
-    pixelData = nextState.map(row => [...row]);
+    pixelData = new Map(nextState.pixelData);
+    artboardOffset = { ...nextState.artboardOffset };
     renderCanvas();
     updateUndoRedoButtons();
 }
@@ -1277,10 +1354,20 @@ function handleRedo() {
 
 // --- TOOL IMPLEMENTATIONS ---
 
-function drawPencil(x: number, y: number) {
-    if (x >= 0 && x < gridWidth && y >= 0 && y < gridHeight) {
-        pixelData[y][x] = selectedColor;
+function getPixel(x: number, y: number): string {
+    return pixelData.get(`${x},${y}`) || '#ffffff';
+}
+
+function setPixel(x: number, y: number, color: string) {
+    if (color === '#ffffff') {
+        pixelData.delete(`${x},${y}`); // Optimization: don't store default color
+    } else {
+        pixelData.set(`${x},${y}`, color);
     }
+}
+
+function drawPencil(x: number, y: number) {
+    setPixel(x, y, selectedColor);
 }
 
 function drawSquare(x: number, y: number) {
@@ -1292,9 +1379,7 @@ function drawSquare(x: number, y: number) {
 
     for (let i = startY; i < endY; i++) {
         for (let j = startX; j < endX; j++) {
-            if (j >= 0 && j < gridWidth && i >= 0 && i < gridHeight) {
-                pixelData[i][j] = selectedColor;
-            }
+            setPixel(j, i, selectedColor);
         }
     }
 }
@@ -1302,21 +1387,17 @@ function drawSquare(x: number, y: number) {
 function drawCircle(centerX: number, centerY: number) {
     const brushSize = parseInt(brushSizeInput.value, 10) || 1;
 
-    // Use pre-calculated patterns for small, common sizes for better aesthetics
     if (brushSize in SMALL_CIRCLE_PATTERNS) {
         const pattern = SMALL_CIRCLE_PATTERNS[brushSize as keyof typeof SMALL_CIRCLE_PATTERNS];
         const offset = Math.floor(brushSize / 2);
         for (const p of pattern) {
             const x = centerX + p[0] - offset;
             const y = centerY + p[1] - offset;
-            if (x >= 0 && x < gridWidth && y >= 0 && y < gridHeight) {
-                pixelData[y][x] = selectedColor;
-            }
+            setPixel(x, y, selectedColor);
         }
         return;
     }
 
-    // For larger sizes, use a mathematical formula
     const radius = brushSize / 2;
     const startY = Math.floor(centerY - radius);
     const endY = Math.ceil(centerY + radius);
@@ -1325,13 +1406,10 @@ function drawCircle(centerX: number, centerY: number) {
 
     for (let i = startY; i < endY; i++) {
         for (let j = startX; j < endX; j++) {
-            if (j >= 0 && j < gridWidth && i >= 0 && i < gridHeight) {
-                const dx = j - centerX;
-                const dy = i - centerY;
-                // Check if the center of the pixel is within the circle
-                if (Math.sqrt(dx * dx + dy * dy) < radius) {
-                    pixelData[i][j] = selectedColor;
-                }
+            const dx = j - centerX;
+            const dy = i - centerY;
+            if (Math.sqrt(dx * dx + dy * dy) < radius) {
+                setPixel(j, i, selectedColor);
             }
         }
     }
@@ -1339,35 +1417,45 @@ function drawCircle(centerX: number, centerY: number) {
 
 
 function globalFill(x: number, y: number) {
-    if (pixelData[y]?.[x] === undefined) return;
-    const targetColor = pixelData[y][x];
-    if (targetColor !== selectedColor) {
-        pixelData = pixelData.map(row =>
-            row.map(cellColor =>
-                cellColor === targetColor ? selectedColor : cellColor
-            )
-        );
+    const targetColor = getPixel(x, y);
+    if (targetColor === selectedColor) return;
+
+    const keysToUpdate: string[] = [];
+    for (const [key, color] of pixelData.entries()) {
+        if (color === targetColor) {
+            keysToUpdate.push(key);
+        }
+    }
+    for (const key of keysToUpdate) {
+        pixelData.set(key, selectedColor);
     }
 }
 
 function floodFill(startX: number, startY: number) {
-    const targetColor = pixelData[startY]?.[startX];
-    if (targetColor === undefined || targetColor === selectedColor) {
-        return;
-    }
+    const targetColor = getPixel(startX, startY);
+    if (targetColor === selectedColor) return;
 
     const q: [number, number][] = [[startX, startY]];
-    pixelData[startY][startX] = selectedColor;
+    const visited = new Set<string>([`${startX},${startY}`]);
+    let processed = 0;
+    const limit = gridWidth * gridHeight * 10; // Safety limit
 
-    let head = 0;
-    while(head < q.length){
-        const [x, y] = q[head++];
+    while (q.length > 0) {
+        const [x, y] = q.shift()!;
+        setPixel(x, y, selectedColor);
+        processed++;
+        if (processed > limit) {
+            console.warn("Flood fill limit reached.");
+            break;
+        }
+
         const neighbors: [number, number][] = [
             [x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]
         ];
         for (const [nx, ny] of neighbors) {
-            if (nx >= 0 && nx < gridWidth && ny >= 0 && ny < gridHeight && pixelData[ny][nx] === targetColor) {
-                pixelData[ny][nx] = selectedColor;
+            const key = `${nx},${ny}`;
+            if (!visited.has(key) && getPixel(nx, ny) === targetColor) {
+                visited.add(key);
                 q.push([nx, ny]);
             }
         }
@@ -1383,7 +1471,6 @@ function toggleTextPlacementMode() {
     canvas.style.cursor = isTextPlacementMode ? 'crosshair' : (isPanMode ? 'grab' : 'default');
 
     if (isTextPlacementMode && isPanMode) {
-        // Deactivate pan mode if we enter text mode
         togglePanMode(); 
     }
 }
@@ -1398,29 +1485,26 @@ function cancelTextPlacementMode() {
 }
 
 /**
- * Merges the temporary generated background into the main pixelData grid.
- * This makes the previewed background permanent.
- * @returns {boolean} - True if a commit happened, false otherwise.
+ * Merges the temporary generated background into the main pixelData.
  */
 function commitGeneratedBackground(): boolean {
-    if (!generatedBackgroundData) {
-        return false;
-    }
+    if (!generatedBackgroundData) return false;
 
-    const newData = pixelData.map(row => [...row]);
     let modified = false;
+    const keysToUpdate: {x: number, y: number}[] = [];
+
+    // Find all mask pixels
     for (let y = 0; y < gridHeight; y++) {
         for (let x = 0; x < gridWidth; x++) {
-            if (newData[y]?.[x] === MASK_COLOR) {
-                newData[y][x] = generatedBackgroundData[y][x];
+            const ax = x + artboardOffset.x;
+            const ay = y + artboardOffset.y;
+            if (getPixel(ax, ay) === MASK_COLOR) {
+                setPixel(ax, ay, generatedBackgroundData[y][x]);
                 modified = true;
             }
         }
     }
-
-    if (modified) {
-        pixelData = newData;
-    }
+    
     generatedBackgroundData = null;
     return modified;
 }
@@ -1433,76 +1517,81 @@ function updateGridSize() {
 
 function processImage() {
     if (!originalImage) {
-        pixelData = [];
+        pixelData.clear();
         renderCanvas();
         return;
     }
 
-    // Discard any temporary background when loading a new image
     generatedBackgroundData = null;
     resetHistory();
 
-    // Create a temporary canvas to resample the image to the grid dimensions.
+    // 1. Determine base dimensions (unscaled) to fit the current viewport aspect ratio
+    const imgAspectRatio = originalImage.width / originalImage.height;
+    const gridAspectRatio = gridWidth / gridHeight;
+    let baseGridWidth, baseGridHeight;
+
+    if (imgAspectRatio > gridAspectRatio) {
+        baseGridWidth = gridWidth;
+        baseGridHeight = gridWidth / imgAspectRatio;
+    } else {
+        baseGridHeight = gridHeight;
+        baseGridWidth = gridHeight * imgAspectRatio;
+    }
+
+    // 2. Calculate the final, scaled grid dimensions for the entire image
+    const finalGridWidth = Math.round(baseGridWidth * scale);
+    const finalGridHeight = Math.round(baseGridHeight * scale);
+    
+    if (finalGridWidth < 1 || finalGridHeight < 1) {
+        pixelData.clear();
+        renderCanvas();
+        return;
+    }
+
+    // 3. Create a temporary canvas of the exact required pixel dimensions
     const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = gridWidth;
-    tempCanvas.height = gridHeight;
+    tempCanvas.width = finalGridWidth;
+    tempCanvas.height = finalGridHeight;
     const tempCtx = tempCanvas.getContext('2d', { willReadFrequently: true });
     if (!tempCtx) return;
 
-    // Set a white background to handle transparent images gracefully.
-    tempCtx.fillStyle = '#ffffff';
-    tempCtx.fillRect(0, 0, gridWidth, gridHeight);
-
-    // Calculate aspect-ratio correct dimensions for drawing image onto temp canvas
-    const imgAspectRatio = originalImage.width / originalImage.height;
-    const gridAspectRatio = gridWidth / gridHeight;
+    // 4. Draw the original image onto this temp canvas, effectively resampling it
+    tempCtx.drawImage(originalImage, 0, 0, finalGridWidth, finalGridHeight);
     
-    let dWidth, dHeight, dx, dy; // Destination rect on tempCanvas
-    if (imgAspectRatio > gridAspectRatio) {
-        dWidth = gridWidth;
-        dHeight = gridWidth / imgAspectRatio;
-        dx = 0;
-        dy = (gridHeight - dHeight) / 2;
-    } else {
-        dHeight = gridHeight;
-        dWidth = gridHeight * imgAspectRatio;
-        dy = 0;
-        dx = (gridWidth - dWidth) / 2;
-    }
-
-    // Apply scale to the destination rectangle. Image is now always centered.
-    const finalDrawWidth = dWidth * scale;
-    const finalDrawHeight = dHeight * scale;
-    const finalDrawX = dx - (finalDrawWidth - dWidth) / 2;
-    const finalDrawY = dy - (finalDrawHeight - dHeight) / 2;
-
-    tempCtx.drawImage(originalImage, 0, 0, originalImage.width, originalImage.height, finalDrawX, finalDrawY, finalDrawWidth, finalDrawHeight);
-
-    const imageData = tempCtx.getImageData(0, 0, gridWidth, gridHeight);
+    const imageData = tempCtx.getImageData(0, 0, finalGridWidth, finalGridHeight);
     const data = imageData.data;
-    const newPixelData: string[][] = Array.from({ length: gridHeight }, () => Array(gridWidth).fill(''));
-
-    // --- Posterization ---
+    
+    // 5. Posterization setup
     const colorLevels = parseInt(colorDetailSlider.value, 10);
     const factor = 255 / (colorLevels - 1);
 
-    for (let y = 0; y < gridHeight; y++) {
-        for (let x = 0; x < gridWidth; x++) {
-            const i = (y * gridWidth + x) * 4;
-            if (data[i + 3] < 128) { // Handle transparency
-                newPixelData[y][x] = '#ffffff';
-            } else {
-                // Apply posterization to simplify colors
+    // 6. Clear old pixel data and prepare to place the new, centered art
+    pixelData.clear();
+    artboardOffset = { x: 0, y: 0 }; // Reset viewport to top-left
+    
+    // Calculate where the top-left of the new artwork should go to be centered in the viewport
+    const artworkStartX = Math.floor((gridWidth - finalGridWidth) / 2);
+    const artworkStartY = Math.floor((gridHeight - finalGridHeight) / 2);
+    
+    // 7. Iterate over the entire resampled image and place pixels on the infinite grid
+    for (let y = 0; y < finalGridHeight; y++) {
+        for (let x = 0; x < finalGridWidth; x++) {
+            const i = (y * finalGridWidth + x) * 4;
+            let color = '#ffffff'; // Default to white for transparent areas
+            
+            if (data[i + 3] >= 128) { // Consider pixel opaque
                 const r = Math.round(data[i] / factor) * factor;
                 const g = Math.round(data[i+1] / factor) * factor;
                 const b = Math.round(data[i+2] / factor) * factor;
-                
-                newPixelData[y][x] = findClosestColor(r, g, b);
+                color = findClosestColor(r, g, b);
+            }
+            
+            if(color !== '#ffffff') {
+               setPixel(x + artworkStartX, y + artworkStartY, color);
             }
         }
     }
     
-    pixelData = newPixelData;
     renderCanvas();
 }
 
@@ -1557,14 +1646,9 @@ function updateColorCounts() {
     const counts: { [key: string]: number } = {};
     [...LIMITED_PALETTE, MASK_COLOR].forEach(c => counts[c] = 0);
 
-    if (pixelData && pixelData.length > 0) {
-        for (let y = 0; y < gridHeight; y++) {
-            for (let x = 0; x < gridWidth; x++) {
-                const color = pixelData[y]?.[x];
-                if (color && counts[color] !== undefined) {
-                    counts[color]++;
-                }
-            }
+    for (const color of pixelData.values()) {
+        if (counts[color] !== undefined) {
+            counts[color]++;
         }
     }
 
@@ -1586,6 +1670,7 @@ function resetTransforms() {
     scale = 1.0;
     scaleSlider.value = '1';
     panOffset = { x: 0, y: 0 };
+    artboardOffset = { x: 0, y: 0 };
     if (isPanMode) {
         isPanMode = false;
         panModeBtn.classList.remove('active');
@@ -1594,7 +1679,11 @@ function resetTransforms() {
 }
 
 function saveState() {
-    historyStack.push(pixelData.map(row => [...row]));
+    const state = {
+        pixelData: new Map(pixelData),
+        artboardOffset: { ...artboardOffset }
+    };
+    historyStack.push(state);
     if (historyStack.length > MAX_HISTORY_SIZE) {
         historyStack.shift();
     }
