@@ -1438,7 +1438,13 @@ function floodFill(startX: number, startY: number) {
     const q: [number, number][] = [[startX, startY]];
     const visited = new Set<string>([`${startX},${startY}`]);
     let processed = 0;
-    const limit = gridWidth * gridHeight * 10; // Safety limit
+    const limit = gridWidth * gridHeight; // Safety limit is now the size of the viewport
+
+    // Define viewport boundaries in absolute coordinates
+    const minX = artboardOffset.x;
+    const minY = artboardOffset.y;
+    const maxX = artboardOffset.x + gridWidth;
+    const maxY = artboardOffset.y + gridHeight;
 
     while (q.length > 0) {
         const [x, y] = q.shift()!;
@@ -1453,6 +1459,11 @@ function floodFill(startX: number, startY: number) {
             [x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]
         ];
         for (const [nx, ny] of neighbors) {
+            // Boundary check: ensure the neighbor is within the viewport
+            if (nx < minX || nx >= maxX || ny < minY || ny >= maxY) {
+                continue;
+            }
+
             const key = `${nx},${ny}`;
             if (!visited.has(key) && getPixel(nx, ny) === targetColor) {
                 visited.add(key);
