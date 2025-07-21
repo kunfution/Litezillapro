@@ -1644,14 +1644,23 @@ function updateColorPalette() {
 
 function updateColorCounts() {
     const counts: { [key: string]: number } = {};
+    // Initialize all possible colors to 0
     [...LIMITED_PALETTE, MASK_COLOR].forEach(c => counts[c] = 0);
 
-    for (const color of pixelData.values()) {
-        if (counts[color] !== undefined) {
-            counts[color]++;
+    // Iterate through the visible viewport only
+    for (let y = 0; y < gridHeight; y++) {
+        for (let x = 0; x < gridWidth; x++) {
+            // Get the color from the artboard at the viewport's position
+            const color = getPixel(x + artboardOffset.x, y + artboardOffset.y);
+            
+            // Increment the count for that color
+            if (counts.hasOwnProperty(color)) {
+                counts[color]++;
+            }
         }
     }
 
+    // Update the UI with the new counts
     for (const color in counts) {
         const countEl = colorPaletteContainer.querySelector(`.color-count[data-count-color="${color}"]`) as HTMLSpanElement;
         if (countEl) {
