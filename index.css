@@ -216,14 +216,13 @@ input[type="range"]::-moz-range-thumb {
     width: 100%;
     height: calc(100% - 160px); /* Leave space for larger bottom controls */
     overflow: hidden;
-    background-color: #000;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 20px;
+    background-color: var(--bg-color); /* Match main content for seamless look */
 }
 
 #pixel-canvas {
-    background-color: #000;
+    background-color: #000000;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
@@ -242,31 +241,49 @@ input[type="range"]::-moz-range-thumb {
 
 .color-palette {
     display: flex;
-    gap: 8px;
+    gap: 4px;
     align-items: center;
     background-color: var(--sidebar-bg);
     padding: 8px;
-    border-radius: 30px;
+    border-radius: 8px;
     border: 1px solid var(--border-color);
     flex-shrink: 0;
 }
 
-.color-swatch {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    cursor: pointer;
+.color-swatch-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 4px;
+    border-radius: 4px;
     border: 2px solid transparent;
-    transition: transform 0.2s, border-color 0.2s;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
 }
 
-.color-swatch:hover {
+.color-swatch-wrapper.selected {
+    border-color: var(--primary-color);
+}
+
+.color-swatch {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid var(--border-color);
+    transition: transform 0.2s;
+}
+
+.color-swatch-wrapper:hover .color-swatch {
     transform: scale(1.1);
 }
 
-.color-swatch.selected {
-    border-color: var(--primary-color);
-    transform: scale(1.15);
+.color-count {
+    font-size: 11px;
+    color: var(--text-color-muted);
+    font-family: monospace;
+    min-width: 20px;
+    text-align: center;
 }
 
 .mask-swatch {
@@ -317,4 +334,91 @@ input[type="range"]::-moz-range-thumb {
 
 .hidden {
     display: none;
+}
+
+.bottom-right-controls {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.icon-btn {
+    background: none;
+    border: 1px solid transparent;
+    color: var(--text-color-muted);
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.icon-btn:hover {
+    background-color: var(--control-bg);
+    color: var(--text-color);
+}
+
+.icon-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.icon-btn svg {
+    width: 22px;
+    height: 22px;
+}
+
+/* Popover styles */
+.hotkey-popover {
+    position: absolute;
+    bottom: 170px;
+    right: 24px;
+    background-color: var(--sidebar-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px 25px;
+    z-index: 1000;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+    width: 360px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+    pointer-events: none;
+}
+
+.hotkey-popover:not(.hidden) {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.hotkey-popover h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+.hotkey-list {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 12px 20px;
+    align-items: center;
+}
+
+.hotkey-list dt {
+    font-family: monospace;
+    font-size: 0.9rem;
+    text-align: right;
+    color: var(--text-color-muted);
+}
+
+.hotkey-list code {
+    background-color: var(--control-bg);
+    border: 1px solid var(--border-color);
+    padding: 3px 7px;
+    border-radius: 4px;
+    font-size: 0.9em;
 }

@@ -1,3 +1,5 @@
+
+
 // --- CONSTANTS ---
 const MASK_COLOR = 'mask';
 const MASK_DISPLAY_COLOR = '#888888';
@@ -34,6 +36,50 @@ const SMALL_CIRCLE_PATTERNS = {
     5: [[0,2],[1,1],[1,2],[1,3],[2,0],[2,1],[2,2],[2,3],[2,4],[3,1],[3,2],[3,3],[4,2]],
 };
 
+const PIXEL_FONT: { [key: string]: number[][] } = {
+    'A': [[0,1,0],[1,0,1],[1,1,1],[1,0,1],[1,0,1]],
+    'B': [[1,1,0],[1,0,1],[1,1,0],[1,0,1],[1,1,0]],
+    'C': [[0,1,1],[1,0,0],[1,0,0],[1,0,0],[0,1,1]],
+    'D': [[1,1,0],[1,0,1],[1,0,1],[1,0,1],[1,1,0]],
+    'E': [[1,1,1],[1,0,0],[1,1,0],[1,0,0],[1,1,1]],
+    'F': [[1,1,1],[1,0,0],[1,1,0],[1,0,0],[1,0,0]],
+    'G': [[0,1,1],[1,0,0],[1,0,1],[1,0,1],[0,1,1]],
+    'H': [[1,0,1],[1,0,1],[1,1,1],[1,0,1],[1,0,1]],
+    'I': [[1,1,1],[0,1,0],[0,1,0],[0,1,0],[1,1,1]],
+    'J': [[0,0,1],[0,0,1],[0,0,1],[1,0,1],[0,1,0]],
+    'K': [[1,0,1],[1,1,0],[1,1,0],[1,0,1],[1,0,1]],
+    'L': [[1,0,0],[1,0,0],[1,0,0],[1,0,0],[1,1,1]],
+    'M': [[1,0,1],[1,1,1],[1,1,1],[1,0,1],[1,0,1]],
+    'N': [[1,1,1],[1,0,1],[1,0,1],[1,0,1],[1,0,1]],
+    'O': [[0,1,0],[1,0,1],[1,0,1],[1,0,1],[0,1,0]],
+    'P': [[1,1,0],[1,0,1],[1,1,0],[1,0,0],[1,0,0]],
+    'Q': [[0,1,0],[1,0,1],[1,0,1],[0,1,1],[0,0,1]],
+    'R': [[1,1,0],[1,0,1],[1,1,0],[1,0,1],[1,0,1]],
+    'S': [[0,1,1],[1,0,0],[0,1,0],[0,0,1],[1,1,0]],
+    'T': [[1,1,1],[0,1,0],[0,1,0],[0,1,0],[0,1,0]],
+    'U': [[1,0,1],[1,0,1],[1,0,1],[1,0,1],[0,1,0]],
+    'V': [[1,0,1],[1,0,1],[1,0,1],[0,1,0],[0,1,0]],
+    'W': [[1,0,1],[1,0,1],[1,1,1],[1,1,1],[1,0,1]],
+    'X': [[1,0,1],[1,0,1],[0,1,0],[1,0,1],[1,0,1]],
+    'Y': [[1,0,1],[1,0,1],[0,1,0],[0,1,0],[0,1,0]],
+    'Z': [[1,1,1],[0,0,1],[0,1,0],[1,0,0],[1,1,1]],
+    '0': [[0,1,0],[1,0,1],[1,1,1],[1,0,1],[0,1,0]],
+    '1': [[0,1,0],[1,1,0],[0,1,0],[0,1,0],[1,1,1]],
+    '2': [[1,1,0],[0,0,1],[0,1,0],[1,0,0],[1,1,1]],
+    '3': [[1,1,0],[0,0,1],[0,1,0],[0,0,1],[1,1,0]],
+    '4': [[0,0,1],[0,1,1],[1,0,1],[1,1,1],[0,0,1]],
+    '5': [[1,1,1],[1,0,0],[1,1,0],[0,0,1],[1,1,0]],
+    '6': [[0,1,1],[1,0,0],[1,1,0],[1,0,1],[0,1,0]],
+    '7': [[1,1,1],[0,0,1],[0,1,0],[0,1,0],[0,1,0]],
+    '8': [[0,1,0],[1,0,1],[0,1,0],[1,0,1],[0,1,0]],
+    '9': [[0,1,0],[1,0,1],[0,1,1],[0,0,1],[1,1,0]],
+    '!': [[0,1,0],[0,1,0],[0,1,0],[0,0,0],[0,1,0]],
+    '?': [[1,1,0],[0,1,1],[0,1,0],[0,0,0],[0,1,0]],
+    '.': [[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,1,0]],
+    ',': [[0,0,0],[0,0,0],[0,0,0],[0,1,0],[1,0,0]],
+    ' ': [[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]],
+};
+
 
 // --- DOM ELEMENTS ---
 const uploadInput = document.getElementById('upload-input') as HTMLInputElement;
@@ -47,6 +93,7 @@ const originalImagePreview = document.getElementById('original-image-preview') a
 const sourceImageEl = document.getElementById('source-image') as HTMLImageElement;
 const colorPaletteContainer = document.getElementById('color-palette') as HTMLDivElement;
 const downloadBtn = document.getElementById('download-btn') as HTMLButtonElement;
+const saveProjectBtn = document.getElementById('save-project-btn') as HTMLButtonElement;
 const scaleSlider = document.getElementById('scale-slider') as HTMLInputElement;
 const colorDetailSlider = document.getElementById('color-detail-slider') as HTMLInputElement;
 const panModeBtn = document.getElementById('pan-mode-btn') as HTMLButtonElement;
@@ -58,6 +105,12 @@ const generateBgBtn = document.getElementById('generate-bg-btn') as HTMLButtonEl
 const strokeSelectionBtn = document.getElementById('stroke-selection-btn') as HTMLButtonElement;
 const canvasPreview = document.getElementById('canvas-preview') as HTMLCanvasElement;
 const ctxPreview = canvasPreview?.getContext('2d');
+const lightEffectBtn = document.getElementById('light-effect-btn') as HTMLButtonElement;
+const textInput = document.getElementById('text-input') as HTMLInputElement;
+const textSizeInput = document.getElementById('text-size-input') as HTMLInputElement;
+const placeTextBtn = document.getElementById('place-text-btn') as HTMLButtonElement;
+const hotkeyHelpBtn = document.getElementById('hotkey-help-btn') as HTMLButtonElement;
+const hotkeyPopover = document.getElementById('hotkey-popover') as HTMLDivElement;
 
 
 // --- APP STATE ---
@@ -76,11 +129,13 @@ let labPaletteCache: { hex: string, lab: { l: number, a: number, b: number } }[]
 
 // Transform and Drawing State
 let scale = 1.0;
-let panOffset = { x: 0, y: 0 };
+let panOffset = { x: 0, y: 0 }; // Used for panning gesture preview in pixels
 let isPanMode = false;
+let isGlowEnabled = false;
 let isDragging = false; // For panning
 let isDrawing = false; // For drawing tools
-let dragStart = { x: 0, y: 0 };
+let dragStart = { x: 0, y: 0 }; // For panning gesture origin
+let isTextPlacementMode = false;
 
 // --- CORE FUNCTIONS ---
 
@@ -89,11 +144,14 @@ function init() {
     uploadInput.addEventListener('change', handleImageUpload);
     sizeSelect.addEventListener('change', handleSizeChange);
     downloadBtn.addEventListener('click', handleDownload);
+    saveProjectBtn.addEventListener('click', handleSaveProject);
     scaleSlider.addEventListener('input', handleScaleChange);
     colorDetailSlider.addEventListener('input', processImage);
     panModeBtn.addEventListener('click', togglePanMode);
     generateBgBtn.addEventListener('click', handleGenerateBackground);
     strokeSelectionBtn.addEventListener('click', handleStrokeSelection);
+    lightEffectBtn.addEventListener('click', toggleLightEffect);
+    placeTextBtn.addEventListener('click', toggleTextPlacementMode);
 
     // Brush tool listeners
     brushToolSelect.addEventListener('change', handleToolChange);
@@ -105,6 +163,26 @@ function init() {
     canvas.addEventListener('mousemove', handleMouseMove);
     canvas.addEventListener('mouseup', handleMouseUp);
     canvas.addEventListener('mouseleave', handleMouseUp);
+
+    // Hotkey Popover Listeners
+    hotkeyHelpBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent this click from being caught by the document listener
+        hotkeyPopover.classList.toggle('hidden');
+        hotkeyHelpBtn.classList.toggle('active', !hotkeyPopover.classList.contains('hidden'));
+    });
+
+    document.addEventListener('click', (e) => {
+        // Hide popover if click is outside of it and not on the help button itself
+        if (!hotkeyPopover.classList.contains('hidden')) {
+            const target = e.target as Node;
+            if (!hotkeyPopover.contains(target) && !hotkeyHelpBtn.contains(target)) {
+                 hotkeyPopover.classList.add('hidden');
+                 hotkeyHelpBtn.classList.remove('active');
+            }
+        }
+    });
+    document.addEventListener('keydown', handleHotkeys);
+
 
     const resizeObserver = new ResizeObserver(() => {
         if (resizeAnimationFrameId) {
@@ -123,43 +201,98 @@ function init() {
 }
 
 /**
- * Main render function. Calculates dimensions and draws the grid.
+ * Calculates the uniform spacing for grid cells to fit within the wrapper.
  */
-function renderCanvas() {
-    if (!ctx || !canvasWrapper) return;
-
+function getSpacing(): number {
+    if (!canvasWrapper) return 1;
     const wrapperWidth = canvasWrapper.clientWidth;
     const wrapperHeight = canvasWrapper.clientHeight;
-
     const spacingX = wrapperWidth / gridWidth;
     const spacingY = wrapperHeight / gridHeight;
-    const spacing = Math.min(spacingX, spacingY);
-
-    const newCanvasWidth = gridWidth * spacing;
-    const newCanvasHeight = gridHeight * spacing;
-
-    if (canvas.width !== newCanvasWidth) canvas.width = newCanvasWidth;
-    if (canvas.height !== newCanvasHeight) canvas.height = newCanvasHeight;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    const dotRadius = spacing * 0.4;
-
-    for (let y = 0; y < gridHeight; y++) {
-        for (let x = 0; x < gridWidth; x++) {
-            let color = pixelData[y]?.[x] || '#ffffff'; // Default to white for empty grid
-            // If there's a temporary background, show it over the mask
-            if (color === MASK_COLOR && generatedBackgroundData) {
-                color = generatedBackgroundData[y][x];
-            }
-            drawDot(ctx, x, y, color, dotRadius, spacing);
-        }
-    }
-    renderCanvasPreview();
+    return Math.min(spacingX, spacingY);
 }
 
 /**
- * Renders a small preview of the entire canvas.
+ * Converts screen coordinates (from a mouse event) to grid cell coordinates.
+ * The canvas is now the exact size of the artboard, so the calculation is direct.
+ */
+function screenToGrid(event: MouseEvent): {x: number, y: number} | null {
+    if (!canvas) return null;
+    const rect = canvas.getBoundingClientRect();
+    const spacing = getSpacing();
+    
+    // Mouse coordinates relative to the canvas element's top-left corner
+    const canvasX = event.clientX - rect.left;
+    const canvasY = event.clientY - rect.top;
+
+    const gridX = Math.floor(canvasX / spacing);
+    const gridY = Math.floor(canvasY / spacing);
+
+    // Check if the coordinates are within the grid bounds
+    if (gridX < 0 || gridX >= gridWidth || gridY < 0 || gridY >= gridHeight) {
+        return null;
+    }
+
+    return { x: gridX, y: gridY };
+}
+
+
+/**
+ * Main render function. Resizes the canvas element to be the exact artboard size
+ * and then draws the grid. The border and background are handled by CSS.
+ */
+function renderCanvas() {
+    if (!ctx || !canvasWrapper) return;
+    if(resizeAnimationFrameId) resizeAnimationFrameId = null;
+
+    const spacing = getSpacing();
+    
+    // Calculate final dimensions for the canvas element
+    const artboardWidth = gridWidth * spacing;
+    const artboardHeight = gridHeight * spacing;
+    
+    // Set canvas element dimensions (both buffer and style)
+    if (canvas.width !== artboardWidth) canvas.width = artboardWidth;
+    if (canvas.height !== artboardHeight) canvas.height = artboardHeight;
+    // The flexbox wrapper will handle centering the element with this style.
+    canvas.style.width = `${artboardWidth}px`;
+    canvas.style.height = `${artboardHeight}px`;
+
+    // Clear canvas. The background color is now handled by CSS on the canvas element itself.
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const dotRadius = spacing * 0.35;
+
+    // Calculate temporary pan in grid cells for preview during a pan gesture
+    const panCellsX = isDragging && isPanMode ? Math.round(panOffset.x / spacing) : 0;
+    const panCellsY = isDragging && isPanMode ? Math.round(panOffset.y / spacing) : 0;
+
+    for (let y = 0; y < gridHeight; y++) { // y is the destination cell row
+        for (let x = 0; x < gridWidth; x++) { // x is the destination cell column
+            
+            // Find the source pixel in our data grid
+            const sourceX = x - panCellsX;
+            const sourceY = y - panCellsY;
+
+            let color = pixelData[sourceY]?.[sourceX] || '#ffffff';
+
+            // If there's a temporary background, show it over the mask
+            // Note: the temporary background itself does not pan. It becomes pannable once committed.
+            if (color === MASK_COLOR && generatedBackgroundData) {
+                 color = generatedBackgroundData[sourceY]?.[sourceX] || MASK_COLOR;
+            }
+
+            // Draw the dot. No offsets are needed as the canvas is the artboard.
+            drawDot(ctx, x, y, color, dotRadius, spacing);
+        }
+    }
+    
+    renderCanvasPreview();
+    updateColorCounts();
+}
+
+/**
+ * Renders a small preview of the entire canvas. This always shows the committed state.
  */
 function renderCanvasPreview() {
     if (!ctxPreview || !canvasPreview) return;
@@ -183,7 +316,7 @@ function renderCanvasPreview() {
 
     ctxPreview.clearRect(0, 0, canvasPreview.width, canvasPreview.height);
 
-    const dotRadius = spacing * 0.4;
+    const dotRadius = spacing * 0.35;
 
     for (let y = 0; y < gridHeight; y++) {
         for (let x = 0; x < gridWidth; x++) {
@@ -194,7 +327,7 @@ function renderCanvasPreview() {
                 color = generatedBackgroundData[y][x];
             }
 
-            // Draw the dot using the shared function
+            // Draw the dot using the shared function (no offset for preview)
             drawDot(ctxPreview, x, y, color, dotRadius, spacing);
         }
     }
@@ -221,19 +354,149 @@ function drawDot(
         finalColor = CANVAS_DOT_COLOR_FOR_BLACK;
     }
 
+    // Apply glow effect if enabled
+    if (isGlowEnabled && color !== MASK_COLOR) {
+        context.shadowBlur = 8;
+        context.shadowColor = finalColor;
+    }
+
     context.beginPath();
     context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
     context.fillStyle = finalColor;
     context.fill();
+
+    // Reset shadow effect to not affect subsequent drawings in the same frame
+    if (isGlowEnabled && color !== MASK_COLOR) {
+        context.shadowBlur = 0;
+    }
 }
 
 
 // --- EVENT HANDLERS ---
 
+function handleHotkeys(event: KeyboardEvent) {
+    // Handle Esc key to close popover
+    if (event.key === 'Escape') {
+        if (!hotkeyPopover.classList.contains('hidden')) {
+            hotkeyPopover.classList.add('hidden');
+            hotkeyHelpBtn.classList.remove('active');
+            event.preventDefault(); // Prevent other 'Esc' behaviors
+            return;
+        }
+    }
+
+    // Don't trigger hotkeys if user is typing in an input field
+    const target = event.target as HTMLElement;
+    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+        return;
+    }
+
+    // Handle shortcuts with modifiers (Ctrl, Alt)
+    if (event.ctrlKey) {
+        switch (event.key.toLowerCase()) {
+            case 'z':
+                event.preventDefault();
+                undoBtn.click();
+                break;
+            case 'y':
+                event.preventDefault();
+                redoBtn.click();
+                break;
+            case 's':
+                event.preventDefault();
+                if (event.altKey) {
+                    // Ctrl + Alt + S
+                    handleDownload();
+                } else {
+                    // Ctrl + S
+                    handleSaveProject();
+                }
+                break;
+        }
+        return; // Stop further processing for Ctrl-combos
+    }
+
+    // Handle single-key shortcuts
+    let toolChanged = false;
+    switch (event.key.toLowerCase()) {
+        case 'b':
+            brushToolSelect.value = 'pencil';
+            toolChanged = true;
+            break;
+        case 'm':
+            brushToolSelect.value = event.shiftKey ? 'circle' : 'square';
+            toolChanged = true;
+            break;
+        case 'g':
+            brushToolSelect.value = event.shiftKey ? 'bucket-global' : 'bucket-area';
+            toolChanged = true;
+            break;
+        case 'h':
+            panModeBtn.click();
+            break;
+        case 'l':
+            lightEffectBtn.click();
+            break;
+    }
+    
+    if (toolChanged) {
+        handleToolChange();
+    }
+}
+
 function handleImageUpload(event: Event) {
+    cancelTextPlacementMode();
     const target = event.target as HTMLInputElement;
     const file = target.files?.[0];
-    if (file) {
+    if (!file) return;
+
+    // Route based on file extension
+    if (file.name.endsWith('.pixelart')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const text = e.target?.result as string;
+                const projectData = JSON.parse(text);
+
+                if (!projectData.gridWidth || !projectData.gridHeight || !projectData.pixelData) {
+                    throw new Error("Invalid project file format.");
+                }
+
+                // Restore state from file
+                gridWidth = projectData.gridWidth;
+                gridHeight = projectData.gridHeight;
+                pixelData = projectData.pixelData;
+                
+                // Update UI to match loaded state
+                const sizeValue = `${gridWidth}x${gridHeight}`;
+                if ([...sizeSelect.options].some(opt => opt.value === sizeValue)) {
+                    sizeSelect.value = sizeValue;
+                } else {
+                     // Optional: handle custom sizes not in dropdown, for now, we just update the internal state
+                     console.warn(`Loaded a custom grid size (${sizeValue}) that is not in the dropdown list.`);
+                }
+
+                originalImage = null;
+                originalImagePreview.classList.add('hidden');
+                fileNameSpan.textContent = file.name;
+                generatedBackgroundData = null; // Clear any temp background
+                resetTransforms();
+                updateTransformControlsState(false);
+                resetHistory();
+                renderCanvas();
+                
+            } catch (error) {
+                console.error("Error loading project file:", error);
+                alert("Could not load project file. It may be corrupt or in the wrong format.");
+                fileNameSpan.textContent = "Error loading project.";
+            }
+        };
+        reader.onerror = () => {
+            console.error("Error reading project file.");
+            fileNameSpan.textContent = "Error reading project file.";
+        };
+        reader.readAsText(file);
+    } else { // This is an image file
         const reader = new FileReader();
         reader.onload = (e) => {
             originalImage = new Image();
@@ -243,19 +506,23 @@ function handleImageUpload(event: Event) {
                 fileNameSpan.textContent = file.name;
                 resetTransforms();
                 updateTransformControlsState(true);
-                processImage();
+                processImage(); // This also resets history
             };
             originalImage.onerror = () => {
                 console.error("Error loading image.");
                 fileNameSpan.textContent = "Error loading file.";
-            }
+            };
             originalImage.src = e.target?.result as string;
         };
         reader.readAsDataURL(file);
     }
+    
+    // Reset file input to allow uploading the same file again
+    uploadInput.value = '';
 }
 
 function handleSizeChange() {
+    cancelTextPlacementMode();
     updateGridSize();
     pixelData = [];
     generatedBackgroundData = null; // Clear temp background
@@ -270,6 +537,15 @@ function handleSizeChange() {
 }
 
 function handleMouseDown(event: MouseEvent) {
+    if (event.shiftKey) { // Eyedropper tool
+        handleEyedropper(event);
+        return;
+    }
+
+    if (isTextPlacementMode) {
+        placeTextOnCanvas(event);
+        return;
+    }
     if (isPanMode) {
         handlePanStart(event);
         return;
@@ -308,18 +584,29 @@ function handleMouseUp() {
     isDrawing = false;
 }
 
+function handleEyedropper(event: MouseEvent) {
+    if (!ctx) return;
+    const coords = screenToGrid(event);
+    if (!coords) return;
+    
+    const { x, y } = coords;
+    const pickedColor = pixelData[y]?.[x];
+
+    if (pickedColor) {
+        // Check if the picked color is part of our swatch list
+        if ([...LIMITED_PALETTE, MASK_COLOR].includes(pickedColor)) {
+            selectColor(pickedColor);
+        }
+    }
+}
+
+
 function applyToolAt(event: MouseEvent) {
     if (!ctx) return;
+    const coords = screenToGrid(event);
+    if (!coords) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const spacing = canvas.clientWidth / gridWidth;
-    const canvasX = event.clientX - rect.left;
-    const canvasY = event.clientY - rect.top;
-    const x = Math.floor(canvasX / spacing);
-    const y = Math.floor(canvasY / spacing);
-
-    if (x < 0 || x >= gridWidth || y < 0 || y >= gridHeight) return;
-
+    const { x, y } = coords;
     const tool = brushToolSelect.value;
 
     switch (tool) {
@@ -463,8 +750,151 @@ function generateRandomRects(grid: string[][]) {
     }
 }
 
+/** Fills the canvas with a tiling of Tetris-like pieces. */
+function generateTetrisPattern(grid: string[][]) {
+    // 1. Define shapes and all their rotations
+    const shapes = {
+        'I': [
+            [[1, 1, 1, 1]],
+            [[1], [1], [1], [1]]
+        ],
+        'O': [
+            [[1, 1], [1, 1]]
+        ],
+        'T': [
+            [[0, 1, 0], [1, 1, 1]],
+            [[1, 0], [1, 1], [1, 0]],
+            [[1, 1, 1], [0, 1, 0]],
+            [[0, 1], [1, 1], [0, 1]]
+        ],
+        'J': [
+            [[1, 0, 0], [1, 1, 1]],
+            [[1, 1], [1, 0], [1, 0]],
+            [[1, 1, 1], [0, 0, 1]],
+            [[0, 1], [0, 1], [1, 1]]
+        ],
+        'L': [
+            [[0, 0, 1], [1, 1, 1]],
+            [[1, 0], [1, 0], [1, 1]],
+            [[1, 1, 1], [1, 0, 0]],
+            [[1, 1], [0, 1], [0, 1]]
+        ],
+        'S': [
+            [[0, 1, 1], [1, 1, 0]],
+            [[1, 0], [1, 1], [0, 1]]
+        ],
+        'Z': [
+            [[1, 1, 0], [0, 1, 1]],
+            [[0, 1], [1, 1], [1, 0]]
+        ],
+    };
+
+    const allPieceMatrices: number[][][] = Object.values(shapes).flat();
+    const pieceColors = LIMITED_PALETTE.filter(c => c !== '#222222' && c !== '#ffffff');
+    const fallbackColor = '#0f8d0f'; // Dark Green as a fallback instead of black/grey
+
+    // 2. Work on a smaller grid where each cell represents a 2x2 block
+    const tileGridHeight = Math.floor(gridHeight / 2);
+    const tileGridWidth = Math.floor(gridWidth / 2);
+    
+    if (tileGridHeight === 0 || tileGridWidth === 0) {
+        // Grid is too small to tile, just fill with a color
+        const color = pieceColors[0] || fallbackColor;
+        for (let y = 0; y < gridHeight; y++) {
+            for (let x = 0; x < gridWidth; x++) {
+                grid[y][x] = color;
+            }
+        }
+        return;
+    }
+
+    // This grid stores the color for each TILE
+    const tempTileGrid: (string | null)[][] = Array.from({ length: tileGridHeight }, () => Array(tileGridWidth).fill(null));
+
+    // 3. Main tiling loop on the tile grid
+    for (let y = 0; y < tileGridHeight; y++) {
+        for (let x = 0; x < tileGridWidth; x++) {
+            if (tempTileGrid[y][x] !== null) continue;
+
+            const shuffledPieces = [...allPieceMatrices].sort(() => Math.random() - 0.5);
+            let pieceWasPlaced = false;
+
+            for (const pieceMatrix of shuffledPieces) {
+                const pieceHeight = pieceMatrix.length;
+                const pieceWidth = pieceMatrix[0].length;
+
+                for (let py = 0; py < pieceHeight; py++) {
+                    for (let px = 0; px < pieceWidth; px++) {
+                        if (pieceMatrix[py][px] === 0) continue;
+
+                        const anchorY = y - py;
+                        const anchorX = x - px;
+
+                        if (anchorY < 0 || anchorX < 0 || anchorY + pieceHeight > tileGridHeight || anchorX + pieceWidth > tileGridWidth) {
+                            continue;
+                        }
+
+                        let hasOverlap = false;
+                        for (let cy = 0; cy < pieceHeight; cy++) {
+                            for (let cx = 0; cx < pieceWidth; cx++) {
+                                if (pieceMatrix[cy][cx] === 1 && tempTileGrid[anchorY + cy][anchorX + cx] !== null) {
+                                    hasOverlap = true;
+                                    break;
+                                }
+                            }
+                            if (hasOverlap) break;
+                        }
+
+                        if (hasOverlap) continue;
+
+                        const color = pieceColors[Math.floor(Math.random() * pieceColors.length)];
+                        for (let cy = 0; cy < pieceHeight; cy++) {
+                            for (let cx = 0; cx < pieceWidth; cx++) {
+                                if (pieceMatrix[cy][cx] === 1) {
+                                    tempTileGrid[anchorY + cy][anchorX + cx] = color;
+                                }
+                            }
+                        }
+                        
+                        pieceWasPlaced = true;
+                        break;
+                    }
+                    if (pieceWasPlaced) break;
+                }
+                if (pieceWasPlaced) break;
+            }
+
+            if (!pieceWasPlaced) {
+                tempTileGrid[y][x] = fallbackColor;
+            }
+        }
+    }
+
+    // 4. Render the scaled-up tile grid onto the final output grid
+    // Pre-fill with fallback color to handle odd dimensions
+    for (let y = 0; y < gridHeight; y++) {
+        for (let x = 0; x < gridWidth; x++) {
+            grid[y][x] = fallbackColor;
+        }
+    }
+
+    for (let ty = 0; ty < tileGridHeight; ty++) {
+        for (let tx = 0; tx < tileGridWidth; tx++) {
+            const color = tempTileGrid[ty][tx] || fallbackColor;
+            const startY = ty * 2;
+            const startX = tx * 2;
+            
+            grid[startY][startX] = color;
+            grid[startY+1][startX] = color;
+            grid[startY][startX+1] = color;
+            grid[startY+1][startX+1] = color;
+        }
+    }
+}
+
 
 function handleGenerateBackground() {
+    cancelTextPlacementMode();
     const originalBtnText = generateBgBtn.textContent;
     generateBgBtn.disabled = true;
     generateBgBtn.textContent = 'Generating...';
@@ -476,7 +906,8 @@ function handleGenerateBackground() {
         generateVerticalBands,
         generateCheckerboard,
         generateBorder,
-        generateRandomRects
+        generateRandomRects,
+        generateTetrisPattern,
     ];
 
     try {
@@ -524,6 +955,7 @@ function handleGenerateBackground() {
 }
 
 function handleStrokeSelection() {
+    cancelTextPlacementMode();
     // A drawing action implicitly "accepts" the generated background.
     commitGeneratedBackground();
 
@@ -590,6 +1022,74 @@ function handleStrokeSelection() {
 }
 
 
+function placeTextOnCanvas(event: MouseEvent) {
+    if (!ctx) return;
+    const coords = screenToGrid(event);
+    if (!coords) return;
+
+    drawTextAt(coords.x, coords.y);
+    cancelTextPlacementMode();
+}
+
+function drawTextAt(startX: number, startY: number) {
+    const text = textInput.value;
+    if (!text) {
+        alert("Please enter some text to add.");
+        return;
+    }
+    
+    if (selectedColor === MASK_COLOR) {
+        alert("Please select a color for the text, not the mask tool itself.");
+        return;
+    }
+
+    const textSize = parseInt(textSizeInput.value, 10);
+    if (isNaN(textSize) || textSize < 1) {
+        alert("Please enter a valid text size (1 or greater).");
+        return;
+    }
+
+    // A drawing action implicitly "accepts" the generated background.
+    saveState();
+    commitGeneratedBackground();
+
+    if (pixelData.length === 0) {
+        pixelData = Array.from({ length: gridHeight }, () => Array(gridWidth).fill('#ffffff'));
+    }
+
+    const textToDraw = text.toUpperCase();
+    let currentX = startX;
+
+    for (const char of textToDraw) {
+        const charBitmap = PIXEL_FONT[char] || PIXEL_FONT['?'];
+        const charHeight = charBitmap.length;
+        const charWidth = charBitmap[0].length;
+
+        for (let y = 0; y < charHeight; y++) {
+            for (let x = 0; x < charWidth; x++) {
+                if (charBitmap[y][x] === 1) {
+                    // This pixel is 'on'. Draw a scaled block for it.
+                    for (let scaleY = 0; scaleY < textSize; scaleY++) {
+                        for (let scaleX = 0; scaleX < textSize; scaleX++) {
+                            const gridX = currentX + (x * textSize) + scaleX;
+                            const gridY = startY + (y * textSize) + scaleY;
+                            
+                            if (gridX >= 0 && gridX < gridWidth && gridY >= 0 && gridY < gridHeight) {
+                                pixelData[gridY][gridX] = selectedColor;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // Move to the next character position (width of current char + 1 pixel for spacing, all scaled)
+        currentX += (charWidth * textSize) + (1 * textSize);
+    }
+
+    renderCanvas();
+}
+
+
 function handleDownload() {
     // Commit any temporary background before downloading to get the final image.
     commitGeneratedBackground();
@@ -632,6 +1132,33 @@ function handleDownload() {
     link.click();
 }
 
+function handleSaveProject() {
+    // Commit any temporary background before saving
+    commitGeneratedBackground();
+
+    if (pixelData.length === 0) {
+        alert("There is nothing to save. Create some art first!");
+        return;
+    }
+
+    const projectData = {
+        gridWidth,
+        gridHeight,
+        pixelData,
+    };
+
+    const jsonString = JSON.stringify(projectData);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.download = 'pixel-art-project.pixelart';
+    link.href = url;
+    link.click();
+    
+    URL.revokeObjectURL(url);
+}
+
 function handleScaleChange(event: Event) {
     if (!originalImage) return;
     scale = parseFloat((event.target as HTMLInputElement).value);
@@ -639,19 +1166,28 @@ function handleScaleChange(event: Event) {
 }
 
 function handleToolChange() {
+    cancelTextPlacementMode();
     const selectedTool = brushToolSelect.value;
     brushSizeInput.disabled = selectedTool === 'pencil';
 }
 
 function togglePanMode() {
-    if (!originalImage) return;
     isPanMode = !isPanMode;
+    if (isPanMode) {
+        cancelTextPlacementMode();
+    }
     panModeBtn.classList.toggle('active', isPanMode);
     canvas.style.cursor = isPanMode ? 'grab' : 'default';
 }
 
+function toggleLightEffect() {
+    isGlowEnabled = !isGlowEnabled;
+    lightEffectBtn.classList.toggle('active', isGlowEnabled);
+    renderCanvas();
+}
+
 function handlePanStart(event: MouseEvent) {
-    if (!isPanMode || !originalImage) return;
+    if (!isPanMode) return;
     isDragging = true;
     dragStart = { x: event.clientX, y: event.clientY };
     canvas.style.cursor = 'grabbing';
@@ -660,24 +1196,61 @@ function handlePanStart(event: MouseEvent) {
 function handlePanMove(event: MouseEvent) {
     if (!isDragging || !isPanMode) return;
     
-    // Panning is now relative to the canvas size, not grid spacing
-    const dx = (event.clientX - dragStart.x);
-    const dy = (event.clientY - dragStart.y);
-
-    panOffset.x += dx;
-    panOffset.y += dy;
-
-    dragStart = { x: event.clientX, y: event.clientY };
-    processImage();
+    // Calculate total offset from the gesture's starting point for smooth panning
+    panOffset.x = event.clientX - dragStart.x;
+    panOffset.y = event.clientY - dragStart.y;
+    
+    // Request a render for the preview
+    if (resizeAnimationFrameId) {
+        window.cancelAnimationFrame(resizeAnimationFrameId);
+    }
+    resizeAnimationFrameId = window.requestAnimationFrame(renderCanvas);
 }
 
 function handlePanEnd() {
     if (!isPanMode || !isDragging) return;
     isDragging = false;
     canvas.style.cursor = 'grab';
+
+    const spacing = getSpacing();
+    const panCellsX = Math.round(panOffset.x / spacing);
+    const panCellsY = Math.round(panOffset.y / spacing);
+
+    // If there was no significant pan, just reset and redraw
+    if (panCellsX === 0 && panCellsY === 0) {
+        panOffset = { x: 0, y: 0 };
+        renderCanvas();
+        return;
+    }
+    
+    // Panning is a modification, so commit temp background and save state for undo
+    commitGeneratedBackground();
+    saveState();
+
+    const newPixelData = Array.from({ length: gridHeight }, () => Array(gridWidth).fill('#ffffff'));
+
+    for (let y = 0; y < gridHeight; y++) {
+        for (let x = 0; x < gridWidth; x++) {
+            const newX = x + panCellsX;
+            const newY = y + panCellsY;
+
+            if (newX >= 0 && newX < gridWidth && newY >= 0 && newY < gridHeight) {
+                // Copy pixel from old location to new location
+                newPixelData[newY][newX] = pixelData[y][x];
+            }
+        }
+    }
+    
+    // Update main data with the shifted data
+    pixelData = newPixelData;
+
+    // Reset pan offset and render the final committed state
+    panOffset = { x: 0, y: 0 };
+    renderCanvas();
 }
 
 function handleUndo() {
+    cancelTextPlacementMode();
     if (historyStack.length === 0) return;
     generatedBackgroundData = null; // Clear temp background when undoing
     redoStack.push(pixelData.map(row => [...row]));
@@ -688,6 +1261,7 @@ function handleUndo() {
 }
 
 function handleRedo() {
+    cancelTextPlacementMode();
     if (redoStack.length === 0) return;
     generatedBackgroundData = null; // Clear temp background when redoing
     historyStack.push(pixelData.map(row => [...row]));
@@ -802,6 +1376,27 @@ function floodFill(startX: number, startY: number) {
 
 // --- HELPER FUNCTIONS ---
 
+function toggleTextPlacementMode() {
+    isTextPlacementMode = !isTextPlacementMode;
+    placeTextBtn.classList.toggle('active', isTextPlacementMode);
+    placeTextBtn.textContent = isTextPlacementMode ? 'Click on Canvas to Place' : 'Add Text';
+    canvas.style.cursor = isTextPlacementMode ? 'crosshair' : (isPanMode ? 'grab' : 'default');
+
+    if (isTextPlacementMode && isPanMode) {
+        // Deactivate pan mode if we enter text mode
+        togglePanMode(); 
+    }
+}
+
+function cancelTextPlacementMode() {
+    if (isTextPlacementMode) {
+        isTextPlacementMode = false;
+        placeTextBtn.classList.remove('active');
+        placeTextBtn.textContent = 'Add Text';
+        canvas.style.cursor = isPanMode ? 'grab' : 'default';
+    }
+}
+
 /**
  * Merges the temporary generated background into the main pixelData grid.
  * This makes the previewed background permanent.
@@ -875,11 +1470,11 @@ function processImage() {
         dx = (gridWidth - dWidth) / 2;
     }
 
-    // Apply scale and pan to the destination rectangle
+    // Apply scale to the destination rectangle. Image is now always centered.
     const finalDrawWidth = dWidth * scale;
     const finalDrawHeight = dHeight * scale;
-    const finalDrawX = dx - (finalDrawWidth - dWidth) / 2 + panOffset.x;
-    const finalDrawY = dy - (finalDrawHeight - dHeight) / 2 + panOffset.y;
+    const finalDrawX = dx - (finalDrawWidth - dWidth) / 2;
+    const finalDrawY = dy - (finalDrawHeight - dHeight) / 2;
 
     tempCtx.drawImage(originalImage, 0, 0, originalImage.width, originalImage.height, finalDrawX, finalDrawY, finalDrawWidth, finalDrawHeight);
 
@@ -912,42 +1507,78 @@ function processImage() {
 }
 
 
+function selectColor(color: string) {
+    selectedColor = color;
+    document.querySelectorAll('.color-swatch-wrapper').forEach(w => w.classList.remove('selected'));
+    const newSelectedWrapper = colorPaletteContainer.querySelector(`.color-swatch-wrapper[data-color="${color}"]`);
+    newSelectedWrapper?.classList.add('selected');
+}
+
 function updateColorPalette() {
     colorPaletteContainer.innerHTML = '';
     
-    const selectColor = (color: string, swatchElement: HTMLElement) => {
-        selectedColor = color;
-        document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
-        swatchElement.classList.add('selected');
-    };
+    const allSwatches = [...LIMITED_PALETTE, MASK_COLOR];
 
-    LIMITED_PALETTE.forEach(color => {
+    allSwatches.forEach(color => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'color-swatch-wrapper';
+        wrapper.dataset.color = color;
+
         const swatch = document.createElement('div');
         swatch.className = 'color-swatch';
-        swatch.style.backgroundColor = color === LIMITED_PALETTE[0] ? CANVAS_DOT_COLOR_FOR_BLACK : color;
-        swatch.dataset.color = color;
-        if (color === selectedColor) {
-            swatch.classList.add('selected');
+        
+        if (color === MASK_COLOR) {
+            swatch.classList.add('mask-swatch');
+            swatch.title = 'Masking Area (for background generation)';
+        } else {
+            swatch.style.backgroundColor = color === LIMITED_PALETTE[0] ? CANVAS_DOT_COLOR_FOR_BLACK : color;
         }
-        swatch.addEventListener('click', () => selectColor(color, swatch));
-        colorPaletteContainer.appendChild(swatch);
+
+        const count = document.createElement('span');
+        count.className = 'color-count';
+        count.dataset.countColor = color;
+        count.textContent = '0';
+
+        wrapper.appendChild(swatch);
+        wrapper.appendChild(count);
+
+        if (color === selectedColor) {
+            wrapper.classList.add('selected');
+        }
+
+        wrapper.addEventListener('click', () => selectColor(color));
+        colorPaletteContainer.appendChild(wrapper);
     });
 
-    // Add Mask Swatch
-    const maskSwatch = document.createElement('div');
-    maskSwatch.className = 'color-swatch mask-swatch';
-    maskSwatch.dataset.color = MASK_COLOR;
-    maskSwatch.title = 'Masking Area (for background generation)';
-    if (MASK_COLOR === selectedColor) {
-        maskSwatch.classList.add('selected');
-    }
-    maskSwatch.addEventListener('click', () => selectColor(MASK_COLOR, maskSwatch));
-    colorPaletteContainer.appendChild(maskSwatch);
+    updateColorCounts();
 }
+
+function updateColorCounts() {
+    const counts: { [key: string]: number } = {};
+    [...LIMITED_PALETTE, MASK_COLOR].forEach(c => counts[c] = 0);
+
+    if (pixelData && pixelData.length > 0) {
+        for (let y = 0; y < gridHeight; y++) {
+            for (let x = 0; x < gridWidth; x++) {
+                const color = pixelData[y]?.[x];
+                if (color && counts[color] !== undefined) {
+                    counts[color]++;
+                }
+            }
+        }
+    }
+
+    for (const color in counts) {
+        const countEl = colorPaletteContainer.querySelector(`.color-count[data-count-color="${color}"]`) as HTMLSpanElement;
+        if (countEl) {
+            countEl.textContent = counts[color].toString();
+        }
+    }
+}
+
 
 function updateTransformControlsState(enabled: boolean) {
     scaleSlider.disabled = !enabled;
-    panModeBtn.disabled = !enabled;
     colorDetailSlider.disabled = !enabled;
 }
 
@@ -996,15 +1627,19 @@ function cacheLabPalette() {
 }
 
 /**
- * Finds the closest color in the palette. This version uses a targeted approach
- * for blue hues to prevent dark blues from matching black, without affecting other colors.
+ * Finds the closest color in the palette using a hybrid approach.
+ * It uses the perceptually uniform CIE LAB color space for distance calculation,
+ * but adds heuristics based on HSL hue to correct common mapping errors,
+ * like blue tones being mapped to purple or black.
  */
 function findClosestColor(r: number, g: number, b: number): string {
     const inputLab = rgbToLab(r, g, b);
     const inputHsl = rgbToHsl(r, g, b);
 
-    // Blue-ish hues are roughly between 180 (cyan-ish) and 270 (purple-blue)
-    const isInputBlueHue = inputHsl.h >= 180 && inputHsl.h <= 270;
+    // Heuristic: Check HSL hue to identify if a color is broadly "blue".
+    // This is more stable for this purpose than checking LAB values for desaturated colors.
+    // The range 180 (cyan) to 280 (violet-blue) captures most blues without grabbing purple (around hue 300).
+    const isInputBlueHue = inputHsl.h >= 180 && inputHsl.h <= 280;
 
     let closestColor = '';
     let minDistance = Infinity;
@@ -1016,21 +1651,23 @@ function findClosestColor(r: number, g: number, b: number): string {
         const dA = inputLab.a - paletteColor.lab.a;
         const dB = inputLab.b - paletteColor.lab.b;
         
-        let distance;
-        
-        // Is the palette color we're checking against the main "Blue"?
-        const paletteIsBlue = paletteColor.hex === '#0f49ff';
+        let distance = Math.sqrt(dL * dL + dA * dA + dB * dB);
 
-        // If the input color is a shade of blue AND we are comparing it against the
-        // palette's official blue, we heavily discount the lightness difference.
-        // This makes it much more likely that a dark navy blue will match the bright
-        // palette blue instead of matching black.
-        if (isInputBlueHue && paletteIsBlue) {
-            const lightnessWeight = 0.2; // Drastically reduce penalty for brightness difference
-            distance = Math.sqrt(Math.pow(dL * lightnessWeight, 2) + Math.pow(dA, 2) + Math.pow(dB, 2));
-        } else {
-            // Use the standard formula for all other color comparisons.
-            distance = Math.sqrt(dL * dL + dA * dA + dB * dB);
+        // --- Color Correction Heuristics ---
+        if (isInputBlueHue) {
+            const paletteIsPurple = paletteColor.hex === '#9a0f9a';
+            const paletteIsBlack = paletteColor.hex === '#222222';
+
+            // If the input color has a blue-ish hue...
+            if (paletteIsPurple) {
+                // ...penalize matching it to purple. This makes it a less attractive choice.
+                distance *= 1.5;
+            }
+            // ...penalize matching it to black, but only if the color isn't extremely dark itself.
+            // This prevents dark navy from becoming black.
+            if (paletteIsBlack && inputLab.l > 20) { 
+                distance *= 1.2;
+            }
         }
 
         if (distance < minDistance) {

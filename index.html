@@ -20,7 +20,7 @@
                 <div class="file-upload-wrapper">
                     <button class="btn file-btn">Choose File</button>
                     <span class="file-name">No file chosen...</span>
-                    <input type="file" id="upload-input" accept="image/*">
+                    <input type="file" id="upload-input" accept="image/*,.pixelart">
                 </div>
                 <label for="scale-slider">Scale:</label>
                  <input type="range" id="scale-slider" min="0.1" max="5" step="0.05" value="1" disabled>
@@ -47,7 +47,7 @@
                 <h3>Brush Tools</h3>
                  <label for="brush-tool-select">Brush Tool:</label>
                 <select id="brush-tool-select" class="select-css">
-                    <option value="pencil">Pencil (1px)</option>
+                    <option value="pencil">Brush</option>
                     <option value="square">Square</option>
                     <option value="circle">Circle</option>
                     <option value="bucket-area">Bucket (Area)</option>
@@ -59,7 +59,16 @@
                     <button id="undo-btn" class="btn" disabled>Undo</button>
                     <button id="redo-btn" class="btn" disabled>Redo</button>
                  </div>
-                 <button id="pan-mode-btn" class="btn" disabled>Pan Mode</button>
+                 <button id="pan-mode-btn" class="btn">Pan Mode</button>
+            </div>
+            
+            <div class="sidebar-section">
+                <h3>Text Tool</h3>
+                <label for="text-input">Text:</label>
+                <input type="text" id="text-input" class="input-css" placeholder="Enter text...">
+                <label for="text-size-input">Text Size:</label>
+                <input type="number" id="text-size-input" value="1" min="1" max="5" class="input-css">
+                <button id="place-text-btn" class="btn">Add Text</button>
             </div>
 
             <div class="sidebar-section">
@@ -71,7 +80,10 @@
 
             <div class="sidebar-section">
                 <h3>Export</h3>
-                <button id="download-btn" class="btn">Download PNG</button>
+                <div class="button-group">
+                    <button id="save-project-btn" class="btn">Save Project</button>
+                    <button id="download-btn" class="btn">Download PNG</button>
+                </div>
             </div>
         </aside>
 
@@ -87,13 +99,43 @@
                 <div id="color-palette" class="color-palette">
                     <!-- Colors will be injected here -->
                 </div>
-                <div id="original-image-preview" class="original-image-preview preview-box hidden">
-                    <p>Original Image</p>
-                    <img id="source-image" src="" alt="Original source image">
+                <div class="bottom-right-controls">
+                    <div id="original-image-preview" class="original-image-preview preview-box hidden">
+                        <p>Original Image</p>
+                        <img id="source-image" src="" alt="Original source image">
+                    </div>
+                    <button id="light-effect-btn" class="icon-btn" title="Toggle Light Effect (L)">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2a7 7 0 0 0-7 7c0 3.03 1.09 5.86 3 7.85V20a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3.15C17.91 14.86 19 12.03 19 9a7 7 0 0 0-7-7z"></path>
+                            <line x1="12" y1="22" x2="12" y2="20"></line>
+                        </svg>
+                    </button>
+                    <button id="hotkey-help-btn" class="icon-btn" title="View Hotkeys">
+                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 8h4M8 12h8M10 16h4"/><rect x="3" y="4" width="18" height="16" rx="2" ry="2"/></svg>
+                    </button>
                 </div>
             </div>
         </main>
     </div>
+
+    <div id="hotkey-popover" class="hotkey-popover hidden">
+        <h3>Keyboard Shortcuts</h3>
+        <dl class="hotkey-list">
+            <dt><code>Ctrl</code> + <code>Z</code></dt><dd>Undo</dd>
+            <dt><code>Ctrl</code> + <code>Y</code></dt><dd>Redo</dd>
+            <dt><code>B</code></dt><dd>Brush Tool</dd>
+            <dt><code>M</code></dt><dd>Square Brush</dd>
+            <dt><code>Shift</code>+<code>M</code></dt><dd>Circle Brush</dd>
+            <dt><code>G</code></dt><dd>Bucket (Area)</dd>
+            <dt><code>Shift</code>+<code>G</code></dt><dd>Bucket (Global)</dd>
+            <dt><code>H</code></dt><dd>Pan Mode</dd>
+            <dt><code>L</code></dt><dd>Light Effect</dd>
+            <dt><code>Shift</code>+<code>Click</code></dt><dd>Eyedropper</dd>
+            <dt><code>Ctrl</code> + <code>S</code></dt><dd>Save Project</dd>
+            <dt><code>Ctrl</code>+<code>Alt</code>+<code>S</code></dt><dd>Download PNG</dd>
+        </dl>
+    </div>
+    
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
