@@ -1,5 +1,31 @@
 
 
+// --- TYPE DEFINITIONS for File System Access API ---
+// These interfaces are added to provide type safety for a modern browser API
+// without causing errors in environments that don't have up-to-date TS DOM libs.
+interface FileSystemFileHandle {
+  createWritable(): Promise<FileSystemWritableFileStream>;
+}
+
+interface FileSystemWritableFileStream extends WritableStream {
+    write(data: Blob | string | BufferSource): Promise<void>;
+    close(): Promise<void>;
+}
+
+interface SaveFilePickerOptions {
+    suggestedName?: string;
+    types?: {
+        description: string;
+        accept: Record<string, string[]>;
+    }[];
+}
+
+// Augment the global Window interface
+interface Window {
+    showSaveFilePicker?(options?: SaveFilePickerOptions): Promise<FileSystemFileHandle>;
+}
+
+
 // --- CONSTANTS ---
 const MASK_COLOR = 'mask';
 const MASK_DISPLAY_COLOR = '#888888';
@@ -1086,7 +1112,50 @@ function drawTextAt(startX: number, startY: number) {
 }
 
 
-function handleDownload() {
+/**
+ * Generic file saving function. Uses the File System Access API if available,
+ * otherwise falls back to the traditional anchor link download method.
+ */
+async function saveFile(
+    suggestedName: string,
+    fileTypes: { description: string; accept: { [mimeType: string]: string[] } }[],
+    blob: Blob
+) {
+    // Feature detection for the API
+    if (window.showSaveFilePicker) {
+        try {
+            // Show the "Save As" dialog
+            const handle = await window.showSaveFilePicker({
+                suggestedName,
+                types: fileTypes,
+            });
+            // Write the blob to the file
+            const writable = await handle.createWritable();
+            await writable.write(blob);
+            await writable.close();
+            return; // Exit after successful save
+        } catch (err) {
+            // This error is thrown if the user clicks "Cancel"
+            if ((err as DOMException).name === 'AbortError') {
+                return;
+            }
+            console.error('Error using showSaveFilePicker:', err);
+            // Fall through to the fallback method if there's an unexpected error
+        }
+    }
+
+    // Fallback for browsers that don't support the API
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.download = suggestedName;
+    link.href = url;
+    document.body.appendChild(link); // Required for Firefox
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
+async function handleDownload() {
     commitGeneratedBackground();
 
     // Check if there's any non-masked art in the current viewport to export.
@@ -1142,14 +1211,19 @@ function handleDownload() {
         }
     }
 
-    const dataUrl = tempCanvas.toDataURL('image/png');
-    const link = document.createElement('a');
-    link.download = 'pixel-art.png';
-    link.href = dataUrl;
-    link.click();
+    const blob = await new Promise<Blob | null>(resolve => tempCanvas.toBlob(resolve, 'image/png'));
+    if (!blob) {
+        alert("Failed to create image blob for download.");
+        return;
+    }
+
+    await saveFile('pixel-art.png', [{
+        description: 'PNG Image',
+        accept: { 'image/png': ['.png'] }
+    }], blob);
 }
 
-function handleDownloadSVG() {
+async function handleDownloadSVG() {
     commitGeneratedBackground();
 
     // Check if there's any non-masked art in the current viewport to export.
@@ -1201,17 +1275,14 @@ function handleDownloadSVG() {
     svgContent += '</svg>';
 
     const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
     
-    const link = document.createElement('a');
-    link.download = 'pixel-art.svg';
-    link.href = url;
-    link.click();
-    
-    URL.revokeObjectURL(url);
+    await saveFile('pixel-art.svg', [{
+        description: 'SVG Image',
+        accept: { 'image/svg+xml': ['.svg'] }
+    }], blob);
 }
 
-function handleSaveProject() {
+async function handleSaveProject() {
     commitGeneratedBackground();
 
     if (pixelData.size === 0) {
@@ -1228,14 +1299,11 @@ function handleSaveProject() {
 
     const jsonString = JSON.stringify(projectData);
     const blob = new Blob([jsonString], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
     
-    const link = document.createElement('a');
-    link.download = 'pixel-art-project.pixelart';
-    link.href = url;
-    link.click();
-    
-    URL.revokeObjectURL(url);
+    await saveFile('pixel-art-project.pixelart', [{
+        description: 'Pixel Art Project File',
+        accept: { 'application/json': ['.pixelart'] }
+    }], blob);
 }
 
 function handleScaleChange(event: Event) {
