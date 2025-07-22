@@ -1179,19 +1179,40 @@ async function handleDownload() {
     const tempCtx = tempCanvas.getContext('2d');
     if (!tempCtx) return;
 
-    const pixelSize = 25; // Size of each dot in pixels
-    const margin = pixelSize; // Margin around the artwork
-    const artWidth = gridWidth * pixelSize;
-    const artHeight = gridHeight * pixelSize;
+    // --- Proportions from SVG export ---
+    // Physical dimensions in millimeters for ratio calculation
+    const diameter_mm = 1.68;
+    const horizontal_space_between_mm = 0.923;
+    const vertical_space_between_mm = 1.315;
 
-    tempCanvas.width = artWidth + margin * 2;
-    tempCanvas.height = artHeight + margin * 2;
-    const radius = pixelSize * 0.35;
+    // Center-to-center distance for the circles in mm
+    const horizontal_step_mm = diameter_mm + horizontal_space_between_mm;
+    const vertical_step_mm = diameter_mm + vertical_space_between_mm;
 
+    // --- Convert to Pixel dimensions ---
+    const diameter_px = 40; // Base resolution for the PNG export
+    const radius_px = diameter_px / 2;
+
+    // Calculate pixel step sizes based on the millimeter ratios
+    const horizontal_step_px = (horizontal_step_mm / diameter_mm) * diameter_px;
+    const vertical_step_px = (vertical_step_mm / diameter_mm) * diameter_px;
+
+    // A margin around the artwork in pixels
+    const margin_px = Math.max(horizontal_step_px, vertical_step_px);
+
+    // Calculate the total size of the artwork area (from first circle center to last circle center)
+    const artAreaWidth_px = (gridWidth > 1) ? (gridWidth - 1) * horizontal_step_px : 0;
+    const artAreaHeight_px = (gridHeight > 1) ? (gridHeight - 1) * vertical_step_px : 0;
+
+    // Calculate the final canvas dimensions including margins
+    tempCanvas.width = Math.round(artAreaWidth_px + 2 * margin_px);
+    tempCanvas.height = Math.round(artAreaHeight_px + 2 * margin_px);
+
+    // Draw background
     tempCtx.fillStyle = '#000000';
     tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
 
-    // Iterate through the current viewport, not the entire artboard
+    // Iterate through the current viewport and draw circles
     for (let y = 0; y < gridHeight; y++) {
         for (let x = 0; x < gridWidth; x++) {
             const artX = x + artboardOffset.x;
@@ -1199,12 +1220,12 @@ async function handleDownload() {
             const color = getPixel(artX, artY);
 
             if (color !== MASK_COLOR) {
-                // Calculate position on the temp canvas based on viewport coordinates (x, y)
-                const drawX = x * pixelSize + margin;
-                const drawY = y * pixelSize + margin;
-
+                // Calculate circle center position in pixels
+                const cx = margin_px + x * horizontal_step_px;
+                const cy = margin_px + y * vertical_step_px;
+                
                 tempCtx.beginPath();
-                tempCtx.arc(drawX + (pixelSize / 2), drawY + (pixelSize / 2), radius, 0, 2 * Math.PI, false);
+                tempCtx.arc(cx, cy, radius_px, 0, 2 * Math.PI, false);
                 tempCtx.fillStyle = color;
                 tempCtx.fill();
             }
@@ -1243,16 +1264,28 @@ async function handleDownloadSVG() {
         return;
     }
 
-    const pixelSize = 10; // Each "pixel" in our art will be 10x10 units in the SVG
-    const radius = pixelSize * 0.35;
-    const margin = pixelSize;
+    // Physical dimensions in millimeters as per user request
+    const diameter_mm = 1.68;
+    const radius_mm = diameter_mm / 2;
+    const horizontal_space_between_mm = 0.923;
+    const vertical_space_between_mm = 1.315;
 
-    const artWidth = gridWidth * pixelSize;
-    const artHeight = gridHeight * pixelSize;
-    const totalWidth = artWidth + margin * 2;
-    const totalHeight = artHeight + margin * 2;
+    // Center-to-center distance for the circles
+    const horizontal_step_mm = diameter_mm + horizontal_space_between_mm; // 2.603 mm
+    const vertical_step_mm = diameter_mm + vertical_space_between_mm; // 2.995 mm
 
-    let svgContent = `<svg width="${totalWidth}" height="${totalHeight}" viewBox="0 0 ${totalWidth} ${totalHeight}" xmlns="http://www.w3.org/2000/svg">\n`;
+    // A margin around the artwork
+    const margin_mm = Math.max(horizontal_step_mm, vertical_step_mm);
+
+    // Calculate the total size of the artwork area (from first circle center to last circle center)
+    const artAreaWidth = (gridWidth > 1) ? (gridWidth - 1) * horizontal_step_mm : 0;
+    const artAreaHeight = (gridHeight > 1) ? (gridHeight - 1) * vertical_step_mm : 0;
+
+    // Calculate the final SVG dimensions including margins
+    const totalWidth_mm = artAreaWidth + 2 * margin_mm;
+    const totalHeight_mm = artAreaHeight + 2 * margin_mm;
+
+    let svgContent = `<svg width="${totalWidth_mm.toFixed(3)}mm" height="${totalHeight_mm.toFixed(3)}mm" viewBox="0 0 ${totalWidth_mm.toFixed(3)} ${totalHeight_mm.toFixed(3)}" xmlns="http://www.w3.org/2000/svg">\n`;
     svgContent += `  <rect width="100%" height="100%" fill="#000000" />\n`;
 
     // Iterate through the current viewport
@@ -1263,11 +1296,11 @@ async function handleDownloadSVG() {
             const color = getPixel(artX, artY);
 
             if (color !== MASK_COLOR) {
-                // Calculate center based on viewport coords (x, y)
-                const cx = x * pixelSize + (pixelSize / 2) + margin;
-                const cy = y * pixelSize + (pixelSize / 2) + margin;
+                // Calculate circle center position
+                const cx = margin_mm + x * horizontal_step_mm;
+                const cy = margin_mm + y * vertical_step_mm;
                 
-                svgContent += `  <circle cx="${cx}" cy="${cy}" r="${radius}" fill="${color}" />\n`;
+                svgContent += `  <circle cx="${cx.toFixed(3)}" cy="${cy.toFixed(3)}" r="${radius_mm}" fill="${color}" />\n`;
             }
         }
     }
