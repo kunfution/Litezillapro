@@ -1183,7 +1183,7 @@ async function handleDownload() {
     // Physical dimensions in millimeters for ratio calculation
     const diameter_mm = 1.68;
     const horizontal_space_between_mm = 0.923;
-    const vertical_space_between_mm = 1.315;
+    const vertical_space_between_mm = horizontal_space_between_mm;
 
     // Center-to-center distance for the circles in mm
     const horizontal_step_mm = diameter_mm + horizontal_space_between_mm;
@@ -1268,11 +1268,11 @@ async function handleDownloadSVG() {
     const diameter_mm = 1.68;
     const radius_mm = diameter_mm / 2;
     const horizontal_space_between_mm = 0.923;
-    const vertical_space_between_mm = 1.315;
+    const vertical_space_between_mm = horizontal_space_between_mm;
 
     // Center-to-center distance for the circles
     const horizontal_step_mm = diameter_mm + horizontal_space_between_mm; // 2.603 mm
-    const vertical_step_mm = diameter_mm + vertical_space_between_mm; // 2.995 mm
+    const vertical_step_mm = diameter_mm + vertical_space_between_mm; // 2.603 mm
 
     // A margin around the artwork
     const margin_mm = Math.max(horizontal_step_mm, vertical_step_mm);
