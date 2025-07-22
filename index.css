@@ -229,6 +229,23 @@ input[type="range"]::-moz-range-thumb {
     cursor: pointer;
 }
 
+.label-with-value {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-block: 8px;
+}
+
+.label-with-value label {
+    margin-block: 0;
+}
+
+#scale-value, #color-detail-value {
+    font-family: monospace;
+    font-size: 0.85rem;
+    color: var(--text-color-muted);
+}
+
 
 /* Main Content */
 .main-content {

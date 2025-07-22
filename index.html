@@ -28,9 +28,15 @@
                         <span class="file-name">No file chosen...</span>
                         <input type="file" id="upload-input" accept="image/*,.pixelart">
                     </div>
-                    <label for="scale-slider">Scale:</label>
+                    <div class="label-with-value">
+                        <label for="scale-slider">Scale:</label>
+                        <span id="scale-value">100%</span>
+                    </div>
                     <input type="range" id="scale-slider" min="0.1" max="5" step="0.05" value="1" disabled>
-                    <label for="color-detail-slider">Color Detail:</label>
+                    <div class="label-with-value">
+                        <label for="color-detail-slider">Color Detail:</label>
+                        <span id="color-detail-value">16</span>
+                    </div>
                     <input type="range" id="color-detail-slider" min="2" max="16" step="1" value="16" disabled>
                 </div>
             </div>

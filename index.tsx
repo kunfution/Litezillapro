@@ -1,4 +1,5 @@
 
+
 // --- TYPE DEFINITIONS for File System Access API ---
 // These interfaces are added to provide type safety for a modern browser API
 // without causing errors in environments that don't have up-to-date TS DOM libs.
@@ -148,7 +149,9 @@ const downloadBtn = document.getElementById('download-btn') as HTMLButtonElement
 const downloadSvgBtn = document.getElementById('download-svg-btn') as HTMLButtonElement;
 const saveProjectBtn = document.getElementById('save-project-btn') as HTMLButtonElement;
 const scaleSlider = document.getElementById('scale-slider') as HTMLInputElement;
+const scaleValueSpan = document.getElementById('scale-value') as HTMLSpanElement;
 const colorDetailSlider = document.getElementById('color-detail-slider') as HTMLInputElement;
+const colorDetailValueSpan = document.getElementById('color-detail-value') as HTMLSpanElement;
 const panModeBtn = document.getElementById('pan-mode-btn') as HTMLButtonElement;
 const brushToolSelect = document.getElementById('brush-tool-select') as HTMLSelectElement;
 const brushSizeInput = document.getElementById('brush-size') as HTMLInputElement;
@@ -221,7 +224,7 @@ function init() {
     downloadSvgBtn.addEventListener('click', handleDownloadSVG);
     saveProjectBtn.addEventListener('click', handleSaveProject);
     scaleSlider.addEventListener('input', handleScaleChange);
-    colorDetailSlider.addEventListener('input', processImage);
+    colorDetailSlider.addEventListener('input', handleColorDetailChange);
     panModeBtn.addEventListener('click', togglePanMode);
     generateBgBtn.addEventListener('click', handleGenerateBackground);
     strokeSelectionBtn.addEventListener('click', handleStrokeSelection);
@@ -273,6 +276,7 @@ function init() {
     resizeObserver.observe(canvasWrapper);
 
     cacheLabPalette();
+    updateSliderValues();
     setupCollapsibleSections();
     updateGridSize();
     updateColorPalette();
@@ -285,7 +289,7 @@ function init() {
  * Initializes the collapsible sidebar sections.
  */
 function setupCollapsibleSections() {
-    const sectionsToOpenByDefault = ['section-tracing', 'section-size', 'section-brush'];
+    const sectionsToOpenByDefault = ['section-image', 'section-size', 'section-brush'];
 
     document.querySelectorAll('.sidebar-header').forEach(header => {
         const section = header.closest('.sidebar-section');
@@ -549,9 +553,11 @@ function renderRulers(spacing: number, horizontalOffset: number, verticalOffset:
     topRulerCtx.textBaseline = 'middle';
 
     for (let x = 0; x < gridWidth; x++) {
-        // Ruler numbers should reflect the *committed* artboard offset, not the pan preview.
-        const coordX = x + artboardOffset.x;
-        const isHighlighted = hoveredCoords !== null && hoveredCoords.x === coordX;
+        // The absolute artboard coordinate for this column
+        const absoluteCoordX = x + artboardOffset.x;
+        // The display number is always relative to the viewport (e.g., 1, 2, 3...)
+        const displayNumber = x + 1;
+        const isHighlighted = hoveredCoords !== null && hoveredCoords.x === absoluteCoordX;
         const canvasX = horizontalOffset + x * spacing + (spacing / 2);
 
         if (isHighlighted) {
@@ -562,7 +568,7 @@ function renderRulers(spacing: number, horizontalOffset: number, verticalOffset:
             topRulerCtx.fillStyle = FONT_COLOR;
         }
         
-        topRulerCtx.fillText(String(coordX + 1), canvasX, RULER_BREADTH / 2);
+        topRulerCtx.fillText(String(displayNumber), canvasX, RULER_BREADTH / 2);
     }
 
     // --- Left Ruler (Vertical) ---
@@ -578,9 +584,11 @@ function renderRulers(spacing: number, horizontalOffset: number, verticalOffset:
     leftRulerCtx.textBaseline = 'middle';
     
     for (let y = 0; y < gridHeight; y++) {
-        // Ruler numbers should reflect the *committed* artboard offset, not the pan preview.
-        const coordY = y + artboardOffset.y;
-        const isHighlighted = hoveredCoords !== null && hoveredCoords.y === coordY;
+        // The absolute artboard coordinate for this row
+        const absoluteCoordY = y + artboardOffset.y;
+        // The display number is always relative to the viewport (e.g., 1, 2, 3...)
+        const displayNumber = y + 1;
+        const isHighlighted = hoveredCoords !== null && hoveredCoords.y === absoluteCoordY;
         const canvasY = verticalOffset + y * spacing + (spacing / 2);
         
         if (isHighlighted) {
@@ -591,7 +599,7 @@ function renderRulers(spacing: number, horizontalOffset: number, verticalOffset:
             leftRulerCtx.fillStyle = FONT_COLOR;
         }
         
-        leftRulerCtx.fillText(String(coordY + 1), RULER_BREADTH / 2, canvasY);
+        leftRulerCtx.fillText(String(displayNumber), RULER_BREADTH / 2, canvasY);
     }
 }
 
@@ -885,6 +893,7 @@ function handleImageUpload(event: Event) {
                 }
 
                 updateTransformControlsState(false);
+                updateSliderValues();
                 resetHistory();
                 renderCanvas();
                 
@@ -909,6 +918,7 @@ function handleImageUpload(event: Event) {
                 fileNameSpan.textContent = file.name;
                 resetTransforms();
                 updateTransformControlsState(true);
+                updateSliderValues();
                 processImage(); // This also resets history
             };
             originalImage.onerror = () => {
@@ -935,6 +945,7 @@ function handleSizeChange() {
     uploadInput.value = ''; // Reset file input
     resetTransforms();
     updateTransformControlsState(false);
+    updateSliderValues();
     resetHistory();
     renderCanvas();
 }
@@ -1603,7 +1614,7 @@ async function handleDownload() {
     tempCtx.textAlign = 'center';
     tempCtx.textBaseline = 'middle';
     for (let x = 0; x < gridWidth; x++) {
-        const coordX = x + artboardOffset.x + 1;
+        const coordX = x + 1; // Use viewport-relative coordinate
         const textX = artOriginX + x * horizontal_step_px;
         const textY = RULER_GUTTER / 2;
         tempCtx.fillText(String(coordX), textX, textY);
@@ -1613,7 +1624,7 @@ async function handleDownload() {
     tempCtx.textAlign = 'center';
     tempCtx.textBaseline = 'middle';
     for (let y = 0; y < gridHeight; y++) {
-        const coordY = y + artboardOffset.y + 1;
+        const coordY = y + 1; // Use viewport-relative coordinate
         const textX = RULER_GUTTER / 2;
         const textY = artOriginY + y * vertical_step_px;
         tempCtx.fillText(String(coordY), textX, textY);
@@ -1749,6 +1760,13 @@ async function handleSaveProject() {
 function handleScaleChange(event: Event) {
     if (!originalImage) return;
     scale = parseFloat((event.target as HTMLInputElement).value);
+    updateSliderValues();
+    processImage();
+}
+
+function handleColorDetailChange() {
+    if (!originalImage) return;
+    updateSliderValues();
     processImage();
 }
 
@@ -2194,6 +2212,16 @@ function updateColorCounts() {
 function updateTransformControlsState(enabled: boolean) {
     scaleSlider.disabled = !enabled;
     colorDetailSlider.disabled = !enabled;
+}
+
+function updateSliderValues() {
+    if (scaleValueSpan) {
+        const percentage = Math.round(parseFloat(scaleSlider.value) * 100);
+        scaleValueSpan.textContent = `${percentage}%`;
+    }
+    if (colorDetailValueSpan) {
+        colorDetailValueSpan.textContent = colorDetailSlider.value;
+    }
 }
 
 function resetTransforms() {
