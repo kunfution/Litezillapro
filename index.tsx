@@ -1,5 +1,4 @@
 
-
 // --- TYPE DEFINITIONS for File System Access API ---
 // These interfaces are added to provide type safety for a modern browser API
 // without causing errors in environments that don't have up-to-date TS DOM libs.
@@ -165,6 +164,16 @@ const textSizeInput = document.getElementById('text-size-input') as HTMLInputEle
 const placeTextBtn = document.getElementById('place-text-btn') as HTMLButtonElement;
 const hotkeyHelpBtn = document.getElementById('hotkey-help-btn') as HTMLButtonElement;
 const hotkeyPopover = document.getElementById('hotkey-popover') as HTMLDivElement;
+const topRulerCanvas = document.getElementById('top-ruler') as HTMLCanvasElement;
+const topRulerCtx = topRulerCanvas.getContext('2d');
+const leftRulerCanvas = document.getElementById('left-ruler') as HTMLCanvasElement;
+const leftRulerCtx = leftRulerCanvas.getContext('2d');
+const overlayUploadInput = document.getElementById('overlay-upload-input') as HTMLInputElement;
+const overlayFileNameSpan = document.querySelector('.overlay-file-name') as HTMLSpanElement;
+const overlayOpacitySlider = document.getElementById('overlay-opacity-slider') as HTMLInputElement;
+const clearOverlayBtn = document.getElementById('clear-overlay-btn') as HTMLButtonElement;
+const overlayCanvas = document.getElementById('overlay-canvas') as HTMLCanvasElement;
+const overlayCtx = overlayCanvas.getContext('2d');
 
 
 // --- APP STATE ---
@@ -180,6 +189,14 @@ const MAX_HISTORY_SIZE = 50;
 let selectedColor: string = LIMITED_PALETTE[1]; // Default to white
 let resizeAnimationFrameId: number | null = null;
 let labPaletteCache: { hex: string, lab: { l: number, a: number, b: number } }[] = [];
+let overlayImage: {
+    image: HTMLImageElement;
+    artboardX: number;
+    artboardY: number;
+    widthInCells: number;
+    heightInCells: number;
+    opacity: number;
+} | null = null;
 
 
 // Transform and Drawing State
@@ -191,6 +208,8 @@ let isDragging = false; // For panning
 let isDrawing = false; // For drawing tools
 let dragStart = { x: 0, y: 0 }; // For panning gesture origin
 let isTextPlacementMode = false;
+let hoveredCoords: { x: number; y: number } | null = null; // For ruler highlighting
+
 
 // --- CORE FUNCTIONS ---
 
@@ -209,6 +228,11 @@ function init() {
     lightEffectBtn.addEventListener('click', toggleLightEffect);
     placeTextBtn.addEventListener('click', toggleTextPlacementMode);
 
+    // Overlay Listeners
+    overlayUploadInput.addEventListener('change', handleOverlayUpload);
+    overlayOpacitySlider.addEventListener('input', handleOverlayOpacityChange);
+    clearOverlayBtn.addEventListener('click', handleClearOverlay);
+
     // Brush tool listeners
     brushToolSelect.addEventListener('change', handleToolChange);
     undoBtn.addEventListener('click', handleUndo);
@@ -218,7 +242,7 @@ function init() {
     canvas.addEventListener('mousedown', handleMouseDown);
     canvas.addEventListener('mousemove', handleMouseMove);
     canvas.addEventListener('mouseup', handleMouseUp);
-    canvas.addEventListener('mouseleave', handleMouseUp);
+    canvas.addEventListener('mouseleave', handleMouseLeave);
 
     // Hotkey Popover Listeners
     hotkeyHelpBtn.addEventListener('click', (e) => {
@@ -249,11 +273,33 @@ function init() {
     resizeObserver.observe(canvasWrapper);
 
     cacheLabPalette();
+    setupCollapsibleSections();
     updateGridSize();
     updateColorPalette();
     updateUndoRedoButtons();
     handleToolChange(); // Set initial tool state
     renderCanvas();
+}
+
+/**
+ * Initializes the collapsible sidebar sections.
+ */
+function setupCollapsibleSections() {
+    const sectionsToOpenByDefault = ['section-tracing', 'section-size', 'section-brush'];
+
+    document.querySelectorAll('.sidebar-header').forEach(header => {
+        const section = header.closest('.sidebar-section');
+        if (!section) return;
+
+        // Set initial state
+        if (!sectionsToOpenByDefault.includes(section.id)) {
+            section.classList.add('collapsed');
+        }
+
+        header.addEventListener('click', () => {
+            section.classList.toggle('collapsed');
+        });
+    });
 }
 
 /**
@@ -296,10 +342,10 @@ function screenToGrid(event: MouseEvent): {x: number, y: number} | null {
 
 
 /**
- * Main render function. Renders the current viewport of the artboard.
+ * Main render function. Orchestrates rendering all components of the artboard.
  */
 function renderCanvas() {
-    if (!ctx || !canvasWrapper) return;
+    if (!ctx || !canvasWrapper || !overlayCtx) return;
     if(resizeAnimationFrameId) resizeAnimationFrameId = null;
 
     const spacing = getSpacing();
@@ -307,18 +353,50 @@ function renderCanvas() {
     const artboardWidth = gridWidth * spacing;
     const artboardHeight = gridHeight * spacing;
     
+    // Size the main pixel canvas
     if (canvas.width !== artboardWidth) canvas.width = artboardWidth;
     if (canvas.height !== artboardHeight) canvas.height = artboardHeight;
     canvas.style.width = `${artboardWidth}px`;
     canvas.style.height = `${artboardHeight}px`;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Size and position the overlay canvas to match
+    if (overlayCanvas.width !== artboardWidth) overlayCanvas.width = artboardWidth;
+    if (overlayCanvas.height !== artboardHeight) overlayCanvas.height = artboardHeight;
+    const wrapperWidth = canvasWrapper.clientWidth;
+    const wrapperHeight = canvasWrapper.clientHeight;
+    const canvasLeft = (wrapperWidth - artboardWidth) / 2;
+    const canvasTop = (wrapperHeight - artboardHeight) / 2;
+    overlayCanvas.style.left = `${canvasLeft}px`;
+    overlayCanvas.style.top = `${canvasTop}px`;
+    overlayCanvas.style.width = `${artboardWidth}px`;
+    overlayCanvas.style.height = `${artboardHeight}px`;
 
-    const dotRadius = spacing * 0.35;
+    // This offset is for the rulers, which are outside the flex wrapper
+    const horizontalRulerOffset = (wrapperWidth - artboardWidth) / 2;
+    const verticalRulerOffset = (wrapperHeight - artboardHeight) / 2;
 
     // Pan preview offset in grid cells
     const panPreviewX = isDragging && isPanMode ? Math.round(panOffset.x / spacing) : 0;
     const panPreviewY = isDragging && isPanMode ? Math.round(panOffset.y / spacing) : 0;
+
+    // Render the individual components
+    renderGrid(spacing, panPreviewX, panPreviewY);
+    renderOverlay(spacing, panPreviewX, panPreviewY);
+    renderRulers(spacing, horizontalRulerOffset, verticalRulerOffset);
+    renderBrushPreview(spacing);
+    
+    renderCanvasPreview();
+    updateColorCounts();
+}
+
+/**
+ * Renders the pixel art grid onto the main canvas.
+ */
+function renderGrid(spacing: number, panPreviewX: number, panPreviewY: number) {
+    if (!ctx) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const dotRadius = spacing * 0.35;
 
     for (let y = 0; y < gridHeight; y++) { // y is the viewport row
         for (let x = 0; x < gridWidth; x++) { // x is the viewport col
@@ -337,10 +415,186 @@ function renderCanvas() {
             drawDot(ctx, x, y, color, dotRadius, spacing);
         }
     }
-    
-    renderCanvasPreview();
-    updateColorCounts();
 }
+
+/**
+ * Renders the tracing overlay image onto its dedicated canvas.
+ */
+function renderOverlay(spacing: number, panPreviewX: number, panPreviewY: number) {
+    if (!overlayCtx) return;
+    
+    overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+    if (!overlayImage) return;
+
+    // Top-left corner of the overlay image in screen pixels, relative to the canvas
+    const screenX = (overlayImage.artboardX - (artboardOffset.x - panPreviewX)) * spacing;
+    const screenY = (overlayImage.artboardY - (artboardOffset.y - panPreviewY)) * spacing;
+
+    // Size of the overlay image in screen pixels
+    const screenWidth = overlayImage.widthInCells * spacing;
+    const screenHeight = overlayImage.heightInCells * spacing;
+
+    // Draw the image
+    overlayCtx.globalAlpha = overlayImage.opacity;
+    overlayCtx.drawImage(
+        overlayImage.image,
+        screenX,
+        screenY,
+        screenWidth,
+        screenHeight
+    );
+    overlayCtx.globalAlpha = 1.0; // Reset alpha
+}
+
+
+/**
+ * Renders a preview of the brush shape on the canvas.
+ */
+function renderBrushPreview(spacing: number) {
+    if (!ctx || isDrawing || !hoveredCoords || isPanMode || isTextPlacementMode) {
+        return;
+    }
+
+    const tool = brushToolSelect.value;
+    if (tool !== 'square' && tool !== 'circle') {
+        return;
+    }
+
+    const brushSize = parseInt(brushSizeInput.value, 10) || 1;
+    // Don't show preview for the default 1x1 pencil-like brush
+    if (tool === 'square' && brushSize <= 1) {
+        return;
+    }
+
+    // The absolute grid coordinates of the center of the brush
+    const centerX = hoveredCoords.x;
+    const centerY = hoveredCoords.y;
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.lineWidth = 1.5;
+    
+    if (tool === 'square') {
+        const halfSize = Math.floor(brushSize / 2);
+        // Top-left corner of the brush square in absolute coords
+        const startAbsX = centerX - halfSize;
+        const startAbsY = centerY - halfSize;
+
+        // Convert to viewport pixel coordinates for drawing
+        const viewPxX = (startAbsX - artboardOffset.x) * spacing;
+        const viewPxY = (startAbsY - artboardOffset.y) * spacing;
+        const sizePx = brushSize * spacing;
+
+        ctx.strokeRect(viewPxX, viewPxY, sizePx, sizePx);
+
+    } else if (tool === 'circle') {
+        // Re-use the circle drawing logic, but stroke instead of fill
+        if (brushSize in SMALL_CIRCLE_PATTERNS) {
+            const pattern = SMALL_CIRCLE_PATTERNS[brushSize as keyof typeof SMALL_CIRCLE_PATTERNS];
+            const offset = Math.floor(brushSize / 2);
+            for (const p of pattern) {
+                // Absolute coordinates of the cell to draw
+                const absX = centerX + p[0] - offset;
+                const absY = centerY + p[1] - offset;
+                
+                // Convert to viewport pixel coordinates and stroke the cell's rect
+                const viewPxX = (absX - artboardOffset.x) * spacing;
+                const viewPxY = (absY - artboardOffset.y) * spacing;
+                
+                // Only draw if the cell is within the viewport bounds
+                if (viewPxX >= -spacing && viewPxX <= canvas.width && viewPxY >= -spacing && viewPxY <= canvas.height) {
+                    ctx.strokeRect(viewPxX, viewPxY, spacing, spacing);
+                }
+            }
+        } else {
+            const radiusPx = (brushSize / 2) * spacing;
+            // Center of the brush in viewport pixel coordinates
+            const viewCenterX = hoveredCoords.x - artboardOffset.x;
+            const viewCenterY = hoveredCoords.y - artboardOffset.y;
+            const centerPxX = viewCenterX * spacing + spacing / 2;
+            const centerPxY = viewCenterY * spacing + spacing / 2;
+            
+            ctx.beginPath();
+            // Subtract half the line width to keep the stroke within the boundary
+            ctx.arc(centerPxX, centerPxY, radiusPx - (ctx.lineWidth / 2), 0, 2 * Math.PI);
+            ctx.stroke();
+        }
+    }
+    
+    ctx.restore();
+}
+
+/**
+ * Renders the top and left coordinate rulers.
+ */
+function renderRulers(spacing: number, horizontalOffset: number, verticalOffset: number) {
+    if (!topRulerCtx || !leftRulerCtx || !canvasWrapper) return;
+
+    const RULER_BREADTH = 35; // Matches CSS
+    const FONT_COLOR = '#a0a0a0';
+    const FONT_STYLE = '11px Inter, sans-serif';
+    const HIGHLIGHT_BG = '#007acc';
+    const HIGHLIGHT_FG = '#ffffff';
+
+    // --- Top Ruler (Horizontal) ---
+    const topRulerWidth = canvasWrapper.clientWidth;
+    if (topRulerCanvas.width !== topRulerWidth) topRulerCanvas.width = topRulerWidth;
+    if (topRulerCanvas.height !== RULER_BREADTH) topRulerCanvas.height = RULER_BREADTH;
+    topRulerCanvas.style.width = `${topRulerWidth}px`;
+    topRulerCanvas.style.height = `${RULER_BREADTH}px`;
+    
+    topRulerCtx.clearRect(0, 0, topRulerCanvas.width, topRulerCanvas.height);
+    topRulerCtx.font = FONT_STYLE;
+    topRulerCtx.textAlign = 'center';
+    topRulerCtx.textBaseline = 'middle';
+
+    for (let x = 0; x < gridWidth; x++) {
+        // Ruler numbers should reflect the *committed* artboard offset, not the pan preview.
+        const coordX = x + artboardOffset.x;
+        const isHighlighted = hoveredCoords !== null && hoveredCoords.x === coordX;
+        const canvasX = horizontalOffset + x * spacing + (spacing / 2);
+
+        if (isHighlighted) {
+            topRulerCtx.fillStyle = HIGHLIGHT_BG;
+            topRulerCtx.fillRect(horizontalOffset + x * spacing, 0, spacing, RULER_BREADTH);
+            topRulerCtx.fillStyle = HIGHLIGHT_FG;
+        } else {
+            topRulerCtx.fillStyle = FONT_COLOR;
+        }
+        
+        topRulerCtx.fillText(String(coordX + 1), canvasX, RULER_BREADTH / 2);
+    }
+
+    // --- Left Ruler (Vertical) ---
+    const leftRulerHeight = canvasWrapper.clientHeight;
+    if (leftRulerCanvas.height !== leftRulerHeight) leftRulerCanvas.height = leftRulerHeight;
+    if (leftRulerCanvas.width !== RULER_BREADTH) leftRulerCanvas.width = RULER_BREADTH;
+    leftRulerCanvas.style.height = `${leftRulerHeight}px`;
+    leftRulerCanvas.style.width = `${RULER_BREADTH}px`;
+
+    leftRulerCtx.clearRect(0, 0, leftRulerCanvas.width, leftRulerCanvas.height);
+    leftRulerCtx.font = FONT_STYLE;
+    leftRulerCtx.textAlign = 'center';
+    leftRulerCtx.textBaseline = 'middle';
+    
+    for (let y = 0; y < gridHeight; y++) {
+        // Ruler numbers should reflect the *committed* artboard offset, not the pan preview.
+        const coordY = y + artboardOffset.y;
+        const isHighlighted = hoveredCoords !== null && hoveredCoords.y === coordY;
+        const canvasY = verticalOffset + y * spacing + (spacing / 2);
+        
+        if (isHighlighted) {
+            leftRulerCtx.fillStyle = HIGHLIGHT_BG;
+            leftRulerCtx.fillRect(0, verticalOffset + y * spacing, RULER_BREADTH, spacing);
+            leftRulerCtx.fillStyle = HIGHLIGHT_FG;
+        } else {
+            leftRulerCtx.fillStyle = FONT_COLOR;
+        }
+        
+        leftRulerCtx.fillText(String(coordY + 1), RULER_BREADTH / 2, canvasY);
+    }
+}
+
 
 /**
  * Renders a small preview of the current viewport.
@@ -498,6 +752,58 @@ function handleHotkeys(event: KeyboardEvent) {
     }
 }
 
+function handleOverlayUpload(event: Event) {
+    const target = event.target as HTMLInputElement;
+    const file = target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+            overlayImage = {
+                image: img,
+                artboardX: artboardOffset.x, // Place at current view origin
+                artboardY: artboardOffset.y,
+                widthInCells: gridWidth,
+                heightInCells: gridHeight,
+                opacity: parseFloat(overlayOpacitySlider.value)
+            };
+            overlayFileNameSpan.textContent = file.name;
+            overlayOpacitySlider.disabled = false;
+            clearOverlayBtn.disabled = false;
+            renderCanvas();
+        };
+        img.onerror = () => {
+            alert('Could not load the overlay image.');
+            overlayFileNameSpan.textContent = 'Error loading file.';
+        };
+        img.src = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+    
+    // Reset input
+    overlayUploadInput.value = '';
+}
+
+function handleOverlayOpacityChange(event: Event) {
+    if (!overlayImage) return;
+    const newOpacity = parseFloat((event.target as HTMLInputElement).value);
+    overlayImage.opacity = newOpacity;
+    renderCanvas();
+}
+
+function handleClearOverlay() {
+    overlayImage = null;
+    overlayUploadInput.value = '';
+    if (overlayFileNameSpan) {
+        overlayFileNameSpan.textContent = 'No file chosen...';
+    }
+    overlayOpacitySlider.disabled = true;
+    clearOverlayBtn.disabled = true;
+    renderCanvas();
+}
+
 function handleImageUpload(event: Event) {
     cancelTextPlacementMode();
     const target = event.target as HTMLInputElement;
@@ -519,9 +825,42 @@ function handleImageUpload(event: Event) {
                 // Restore state from file
                 gridWidth = projectData.gridWidth;
                 gridHeight = projectData.gridHeight;
-                pixelData = new Map(projectData.pixelData);
+                let loadedPixelData = new Map<string, string>(projectData.pixelData);
                 artboardOffset = projectData.artboardOffset || {x: 0, y: 0};
+
+                // --- Normalize coordinates so art always starts at (0,0) relative to the rulers ---
+                if (loadedPixelData.size > 0) {
+                    let minX = Infinity;
+                    let minY = Infinity;
+
+                    // Find the top-leftmost pixel of the artwork
+                    for (const key of loadedPixelData.keys()) {
+                        const [x, y] = key.split(',').map(Number);
+                        if (x < minX) minX = x;
+                        if (y < minY) minY = y;
+                    }
+                    
+                    // If the art's top-left corner is not (0,0), shift it and the viewport.
+                    if (minX !== 0 || minY !== 0) {
+                        const shiftX = -minX;
+                        const shiftY = -minY;
+                        
+                        const newPixelData = new Map<string, string>();
+                        for (const [key, color] of loadedPixelData.entries()) {
+                            const [x, y] = key.split(',').map(Number);
+                            const newKey = `${x + shiftX},${y + shiftY}`;
+                            newPixelData.set(newKey, color);
+                        }
+                        
+                        // Update pixel data and adjust artboard offset to keep the view consistent
+                        loadedPixelData = newPixelData;
+                        artboardOffset.x += shiftX;
+                        artboardOffset.y += shiftY;
+                    }
+                }
                 
+                pixelData = loadedPixelData;
+
                 // Update UI to match loaded state
                 const sizeValue = `${gridWidth}x${gridHeight}`;
                 if ([...sizeSelect.options].some(opt => opt.value === sizeValue)) {
@@ -534,7 +873,17 @@ function handleImageUpload(event: Event) {
                 originalImagePreview.classList.add('hidden');
                 fileNameSpan.textContent = file.name;
                 generatedBackgroundData = null; // Clear any temp background
-                resetTransforms();
+
+                // Reset transform states without overriding the loaded artboardOffset
+                scale = 1.0;
+                scaleSlider.value = '1';
+                panOffset = { x: 0, y: 0 };
+                if (isPanMode) {
+                    isPanMode = false;
+                    panModeBtn.classList.remove('active');
+                    canvas.style.cursor = 'default';
+                }
+
                 updateTransformControlsState(false);
                 resetHistory();
                 renderCanvas();
@@ -613,6 +962,7 @@ function handleMouseDown(event: MouseEvent) {
     commitGeneratedBackground();
 
     applyToolAt(event);
+    renderCanvas(); // Redraw to hide the brush preview while drawing
 }
 
 function handleMouseMove(event: MouseEvent) {
@@ -620,7 +970,18 @@ function handleMouseMove(event: MouseEvent) {
         handlePanMove(event);
         return;
     }
-    if (!isDrawing) return;
+
+    // Handle ruler highlighting on hover when not actively drawing
+    const coords = screenToGrid(event);
+    if (!isDrawing) {
+        // Only re-render if the hovered coordinates change
+        if (coords?.x !== hoveredCoords?.x || coords?.y !== hoveredCoords?.y) {
+            hoveredCoords = coords;
+            renderCanvas();
+        }
+    }
+
+    if (!isDrawing) return; // Guard for drawing logic below
 
     const tool = brushToolSelect.value;
     if (tool === 'pencil' || tool === 'square' || tool === 'circle') {
@@ -633,6 +994,21 @@ function handleMouseUp() {
         handlePanEnd();
     }
     isDrawing = false;
+    renderCanvas(); // Redraw to show brush preview again if mouse is over canvas
+}
+
+function handleMouseLeave() {
+    // Stop any drawing or panning action that might be in progress
+    isDrawing = false;
+    if (isPanMode && isDragging) {
+        handlePanEnd();
+    }
+    
+    // Clear the hover highlight state
+    if (hoveredCoords) {
+        hoveredCoords = null;
+        renderCanvas();
+    }
 }
 
 function handleEyedropper(event: MouseEvent) {
@@ -1179,40 +1555,71 @@ async function handleDownload() {
     const tempCtx = tempCanvas.getContext('2d');
     if (!tempCtx) return;
 
-    // --- Proportions from SVG export ---
-    // Physical dimensions in millimeters for ratio calculation
+    // --- Proportions & Sizing ---
+    const diameter_px = 40;
+    const radius_px = diameter_px / 2;
+
+    // These are from the user's SVG spec.
     const diameter_mm = 1.68;
     const horizontal_space_between_mm = 0.923;
     const vertical_space_between_mm = horizontal_space_between_mm;
-
-    // Center-to-center distance for the circles in mm
     const horizontal_step_mm = diameter_mm + horizontal_space_between_mm;
     const vertical_step_mm = diameter_mm + vertical_space_between_mm;
-
-    // --- Convert to Pixel dimensions ---
-    const diameter_px = 40; // Base resolution for the PNG export
-    const radius_px = diameter_px / 2;
 
     // Calculate pixel step sizes based on the millimeter ratios
     const horizontal_step_px = (horizontal_step_mm / diameter_mm) * diameter_px;
     const vertical_step_px = (vertical_step_mm / diameter_mm) * diameter_px;
 
-    // A margin around the artwork in pixels
-    const margin_px = Math.max(horizontal_step_px, vertical_step_px);
+    const RULER_GUTTER = 40; // Space for numbers, slightly bigger than radius
+    const PADDING = 20;      // Outer padding around everything
 
     // Calculate the total size of the artwork area (from first circle center to last circle center)
     const artAreaWidth_px = (gridWidth > 1) ? (gridWidth - 1) * horizontal_step_px : 0;
     const artAreaHeight_px = (gridHeight > 1) ? (gridHeight - 1) * vertical_step_px : 0;
 
-    // Calculate the final canvas dimensions including margins
-    tempCanvas.width = Math.round(artAreaWidth_px + 2 * margin_px);
-    tempCanvas.height = Math.round(artAreaHeight_px + 2 * margin_px);
+    // Total pixel span of the circles themselves, from edge to edge
+    const artPixelWidth = artAreaWidth_px + diameter_px;
+    const artPixelHeight = artAreaHeight_px + diameter_px;
+
+    // Calculate final canvas dimensions
+    tempCanvas.width = RULER_GUTTER + artPixelWidth + PADDING;
+    tempCanvas.height = RULER_GUTTER + artPixelHeight + PADDING;
 
     // Draw background
     tempCtx.fillStyle = '#000000';
     tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
 
-    // Iterate through the current viewport and draw circles
+    // --- Drawing Coordinates & Art ---
+    // The top-left corner of where the first circle's center will be
+    const artOriginX = RULER_GUTTER + radius_px;
+    const artOriginY = RULER_GUTTER + radius_px;
+
+    // --- Draw Ruler Numbers ---
+    const FONT_COLOR = '#e0e0e0'; // Light gray, like UI text
+    tempCtx.fillStyle = FONT_COLOR;
+    tempCtx.font = `${radius_px * 0.9}px Inter, sans-serif`; // Font size relative to circle size
+
+    // Top ruler (X axis)
+    tempCtx.textAlign = 'center';
+    tempCtx.textBaseline = 'middle';
+    for (let x = 0; x < gridWidth; x++) {
+        const coordX = x + artboardOffset.x + 1;
+        const textX = artOriginX + x * horizontal_step_px;
+        const textY = RULER_GUTTER / 2;
+        tempCtx.fillText(String(coordX), textX, textY);
+    }
+
+    // Left ruler (Y axis)
+    tempCtx.textAlign = 'center';
+    tempCtx.textBaseline = 'middle';
+    for (let y = 0; y < gridHeight; y++) {
+        const coordY = y + artboardOffset.y + 1;
+        const textX = RULER_GUTTER / 2;
+        const textY = artOriginY + y * vertical_step_px;
+        tempCtx.fillText(String(coordY), textX, textY);
+    }
+
+    // --- Draw Circles ---
     for (let y = 0; y < gridHeight; y++) {
         for (let x = 0; x < gridWidth; x++) {
             const artX = x + artboardOffset.x;
@@ -1221,8 +1628,8 @@ async function handleDownload() {
 
             if (color !== MASK_COLOR) {
                 // Calculate circle center position in pixels
-                const cx = margin_px + x * horizontal_step_px;
-                const cy = margin_px + y * vertical_step_px;
+                const cx = artOriginX + x * horizontal_step_px;
+                const cy = artOriginY + y * vertical_step_px;
                 
                 tempCtx.beginPath();
                 tempCtx.arc(cx, cy, radius_px, 0, 2 * Math.PI, false);
@@ -1349,6 +1756,7 @@ function handleToolChange() {
     cancelTextPlacementMode();
     const selectedTool = brushToolSelect.value;
     brushSizeInput.disabled = selectedTool === 'pencil';
+    renderCanvas(); // Redraw canvas to show/hide brush preview
 }
 
 function togglePanMode() {
@@ -1372,6 +1780,7 @@ function handlePanStart(event: MouseEvent) {
     dragStart = { x: event.clientX, y: event.clientY };
     canvas.style.cursor = 'grabbing';
     generatedBackgroundData = null; // Cancel temp background on pan
+    hoveredCoords = null; // Clear highlight on pan start
 }
 
 function handlePanMove(event: MouseEvent) {

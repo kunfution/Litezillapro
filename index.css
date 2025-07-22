@@ -1,16 +1,14 @@
 
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
 
 :root {
-    --bg-color: #1a1a1a;
     --sidebar-bg: #252526;
+    --bg-color: #1E1E1E;
     --control-bg: #3c3c3c;
-    --text-color: #e0e0e0;
-    --text-color-muted: #a0a0a0;
+    --text-color: #cccccc;
+    --text-color-muted: #8c8c8c;
     --primary-color: #007acc;
-    --border-color: #4a4a4a;
-    --dot-bg: #444;
+    --border-color: #333333;
     --font-family: 'Inter', sans-serif;
 }
 
@@ -37,32 +35,65 @@ body {
 /* Sidebar */
 .sidebar {
     width: 280px;
-    flex-shrink: 0; /* Prevents sidebar from shrinking */
+    flex-shrink: 0;
     background-color: var(--sidebar-bg);
-    padding: 20px;
+    padding: 10px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
     overflow-y: auto;
     border-right: 1px solid var(--border-color);
 }
 
-.sidebar-section {
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border-color);
+.sidebar-title {
+    font-size: 1.1rem;
+    font-weight: 500;
+    padding: 10px 5px;
+    margin-bottom: 5px;
 }
 
-.sidebar-section:last-child {
+.sidebar-section {
+    border-bottom: 1px solid var(--border-color);
+}
+.sidebar-section:last-of-type {
     border-bottom: none;
 }
 
-.sidebar h3 {
-    font-size: 1rem;
-    font-weight: 500;
-    margin-bottom: 15px;
+.sidebar-header {
     display: flex;
     align-items: center;
+    cursor: pointer;
+    padding: 12px 5px;
     gap: 8px;
+    user-select: none;
+}
+.sidebar-header h3 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-color);
+}
+.sidebar-header .arrow {
+    width: 20px;
+    height: 20px;
+    fill: var(--text-color-muted);
+    transition: transform 0.2s ease-out;
+    transform: rotate(0deg); /* Start pointing down */
+}
+.sidebar-section.collapsed .arrow {
+    transform: rotate(-90deg); /* Point right when collapsed */
+}
+
+.sidebar-content {
+    padding: 0 5px 15px 5px;
+    max-height: 1000px;
+    overflow: hidden;
+    transition: max-height 0.3s ease-in-out, padding 0.3s ease-in-out;
+}
+.sidebar-section.collapsed .sidebar-content {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
 }
 
 .sidebar label {
@@ -80,9 +111,9 @@ body {
 }
 
 /* Form Controls */
-.btn, .select-css, .input-css, input[type="range"] {
+.btn, .select-css, .input-css {
     width: 100%;
-    padding: 10px;
+    padding: 8px 10px;
     border-radius: 4px;
     border: 1px solid var(--border-color);
     background-color: var(--control-bg);
@@ -100,16 +131,17 @@ body {
 .btn.active {
     background-color: var(--primary-color);
     border-color: var(--primary-color);
+    color: white;
 }
 
-.btn:disabled, .select-css:disabled, .input-css:disabled, input[type="range"]:disabled, input[type="checkbox"]:disabled {
+.btn:disabled, .select-css:disabled, .input-css:disabled, input[type="range"]:disabled {
     cursor: not-allowed;
     opacity: 0.5;
 }
 
 .select-css {
     appearance: none;
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e0e0e0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23cccccc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
     background-repeat: no-repeat;
     background-position: right 10px center;
     background-size: 1em;
@@ -121,28 +153,30 @@ input[type="range"] {
     background: transparent;
     cursor: pointer;
     padding: 0;
+    width: 100%;
 }
 input[type="range"]::-webkit-slider-runnable-track {
     background: #555;
-    height: 6px;
-    border-radius: 3px;
+    height: 4px;
+    border-radius: 2px;
 }
 input[type="range"]::-moz-range-track {
     background: #555;
-    height: 6px;
-    border-radius: 3px;
+    height: 4px;
+    border-radius: 2px;
 }
 input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    margin-top: -5px; /* Centers thumb on the track */
+    margin-top: -6px;
     background-color: var(--primary-color);
     height: 16px;
     width: 16px;
     border-radius: 50%;
+    border: 2px solid var(--sidebar-bg);
 }
 input[type="range"]::-moz-range-thumb {
-    border: none;
+    border: 2px solid var(--sidebar-bg);
     border-radius: 50%;
     background-color: var(--primary-color);
     height: 16px;
@@ -155,10 +189,10 @@ input[type="range"]::-moz-range-thumb {
     margin-block: 10px;
 }
 
-/* Ensure stacked buttons have some space */
-.sidebar-section .btn + .btn {
+.sidebar-content .btn + .btn, .sidebar-content .button-group + .btn {
     margin-top: 10px;
 }
+
 
 .file-upload-wrapper {
     position: relative;
@@ -168,7 +202,6 @@ input[type="range"]::-moz-range-thumb {
     border-radius: 4px;
     background-color: var(--control-bg);
 }
-
 .file-upload-wrapper .file-btn {
     width: auto;
     padding: 8px 12px;
@@ -177,8 +210,7 @@ input[type="range"]::-moz-range-thumb {
     border-right: 1px solid var(--border-color);
     border-radius: 4px 0 0 4px;
 }
-
-.file-upload-wrapper .file-name {
+.file-upload-wrapper .file-name, .file-upload-wrapper .overlay-file-name {
     flex-grow: 1;
     padding: 0 10px;
     white-space: nowrap;
@@ -187,8 +219,7 @@ input[type="range"]::-moz-range-thumb {
     font-size: 0.9rem;
     color: var(--text-color-muted);
 }
-
-#upload-input {
+#upload-input, #overlay-upload-input {
     position: absolute;
     left: 0;
     top: 0;
@@ -205,28 +236,64 @@ input[type="range"]::-moz-range-thumb {
     display: flex;
     flex-direction: column;
     padding: 24px;
+    gap: 24px;
     position: relative;
-    min-width: 0; /* Fixes flexbox overflow issues */
+    min-width: 0;
+}
+
+.artboard-container {
+    flex-grow: 1;
+    display: grid;
+    grid-template-columns: 35px 1fr;
+    grid-template-rows: 35px 1fr;
+    gap: 4px;
+    min-height: 0;
+}
+
+.ruler-corner {
+    grid-column: 1;
+    grid-row: 1;
+    background-color: var(--bg-color);
+    border-radius: 4px 0 0 0;
+}
+
+.ruler {
+    background-color: var(--bg-color);
+}
+
+#top-ruler, #left-ruler {
+    border-radius: 0;
 }
 
 .canvas-wrapper {
+    grid-column: 2;
+    grid-row: 2;
     display: flex;
     justify-content: center;
     align-items: center;
     width: 100%;
-    height: calc(100% - 160px); /* Leave space for larger bottom controls */
+    height: 100%;
     overflow: hidden;
-    background-color: var(--bg-color); /* Match main content for seamless look */
+    background-color: #000;
+    position: relative;
+    border: 1px solid var(--border-color);
+    border-left: none;
+    border-top: none;
 }
 
 #pixel-canvas {
     background-color: #000000;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
 }
+
+#overlay-canvas {
+    position: absolute;
+    pointer-events: none;
+    image-rendering: auto;
+}
+
 
 /* Bottom Controls */
 .bottom-controls {
@@ -235,8 +302,8 @@ input[type="range"]::-moz-range-thumb {
     align-items: flex-end;
     gap: 20px;
     width: 100%;
-    padding-top: 20px;
-    height: 160px; /* Increased fixed height for bottom controls */
+    height: 160px;
+    flex-shrink: 0;
 }
 
 .color-palette {
@@ -287,9 +354,9 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .mask-swatch {
-    background-image: repeating-conic-gradient(#cccccc 0% 25%, #fafafa 0% 50%);
+    background-image: repeating-conic-gradient(#888 0% 25%, #666 0% 50%);
     background-size: 16px 16px;
-    background-color: #fff;
+    background-color: #777;
 }
 
 .preview-box {
@@ -376,7 +443,7 @@ input[type="range"]::-moz-range-thumb {
     position: absolute;
     bottom: 170px;
     right: 24px;
-    background-color: var(--sidebar-bg);
+    background-color: #2D2D2D;
     border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 20px 25px;

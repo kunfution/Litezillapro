@@ -14,87 +14,144 @@
 <body>
     <div class="app-container">
         <aside class="sidebar">
-            <div class="sidebar-section">
-                <h3>Image</h3>
-                <label for="upload-input">Upload:</label>
-                <div class="file-upload-wrapper">
-                    <button class="btn file-btn">Choose File</button>
-                    <span class="file-name">No file chosen...</span>
-                    <input type="file" id="upload-input" accept="image/*,.pixelart">
+            <h2 class="sidebar-title">Pixel Art Creator</h2>
+
+            <div class="sidebar-section" id="section-image">
+                <div class="sidebar-header">
+                    <svg class="arrow" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17 16.59 8.59 18 10l-6 6-6-6 1.41-1.41z"/></svg>
+                    <h3>Image</h3>
                 </div>
-                <label for="scale-slider">Scale:</label>
-                 <input type="range" id="scale-slider" min="0.1" max="5" step="0.05" value="1" disabled>
-                <label for="color-detail-slider">Color Detail:</label>
-                <input type="range" id="color-detail-slider" min="2" max="16" step="1" value="16" disabled>
+                <div class="sidebar-content">
+                    <label for="upload-input">Upload:</label>
+                    <div class="file-upload-wrapper">
+                        <button class="btn file-btn">Choose File</button>
+                        <span class="file-name">No file chosen...</span>
+                        <input type="file" id="upload-input" accept="image/*,.pixelart">
+                    </div>
+                    <label for="scale-slider">Scale:</label>
+                    <input type="range" id="scale-slider" min="0.1" max="5" step="0.05" value="1" disabled>
+                    <label for="color-detail-slider">Color Detail:</label>
+                    <input type="range" id="color-detail-slider" min="2" max="16" step="1" value="16" disabled>
+                </div>
             </div>
 
-            <div class="sidebar-section">
-                <h3>Colors</h3>
-                <label for="size-select">Size:</label>
-                <select id="size-select" class="select-css">
-                    <option value="16x14">16x14</option>
-                    <option value="24x12">24x12</option>
-                    <option value="23x23">23x23</option>
-                    <option value="37x23">37x23</option>
-                    <option value="51x23">51x23</option>
-                    <option value="51x26" selected>51x26</option>
-                    <option value="66x26">66x26</option>
-                    <option value="78x26">78x26</option>
-                </select>
+            <div class="sidebar-section" id="section-tracing">
+                <div class="sidebar-header">
+                    <svg class="arrow" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17 16.59 8.59 18 10l-6 6-6-6 1.41-1.41z"/></svg>
+                    <h3>Tracing Overlay</h3>
+                </div>
+                <div class="sidebar-content">
+                    <p class="description">Upload an image to use as a transparent guide for manual tracing. The overlay moves with the canvas.</p>
+                    <label for="overlay-upload-input">Overlay Image:</label>
+                    <div class="file-upload-wrapper">
+                        <button class="btn file-btn">Choose Image</button>
+                        <span class="overlay-file-name">No file chosen...</span>
+                        <input type="file" id="overlay-upload-input" accept="image/*">
+                    </div>
+                    <label for="overlay-opacity-slider">Opacity:</label>
+                    <input type="range" id="overlay-opacity-slider" min="0" max="1" step="0.01" value="0.5" disabled>
+                    <button id="clear-overlay-btn" class="btn" style="margin-top: 10px;" disabled>Clear Overlay</button>
+                </div>
             </div>
 
-            <div class="sidebar-section">
-                <h3>Brush Tools</h3>
-                 <label for="brush-tool-select">Brush Tool:</label>
-                <select id="brush-tool-select" class="select-css">
-                    <option value="pencil">Brush</option>
-                    <option value="square">Square</option>
-                    <option value="circle">Circle</option>
-                    <option value="bucket-area">Bucket (Area)</option>
-                    <option value="bucket-global">Bucket (Global)</option>
-                </select>
-                 <label for="brush-size">Brush Size:</label>
-                 <input type="number" id="brush-size" value="1" min="1" class="input-css">
-                 <div class="button-group">
-                    <button id="undo-btn" class="btn" disabled>Undo</button>
-                    <button id="redo-btn" class="btn" disabled>Redo</button>
-                 </div>
-                 <button id="pan-mode-btn" class="btn">Pan Mode</button>
+            <div class="sidebar-section" id="section-size">
+                 <div class="sidebar-header">
+                    <svg class="arrow" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17 16.59 8.59 18 10l-6 6-6-6 1.41-1.41z"/></svg>
+                    <h3>Size</h3>
+                </div>
+                <div class="sidebar-content">
+                    <label for="size-select">Size:</label>
+                    <select id="size-select" class="select-css">
+                        <option value="16x14">16x14</option>
+                        <option value="24x12">24x12</option>
+                        <option value="23x23">23x23</option>
+                        <option value="37x23">37x23</option>
+                        <option value="51x23">51x23</option>
+                        <option value="51x26" selected>51x26</option>
+                        <option value="66x26">66x26</option>
+                        <option value="78x26">78x26</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="sidebar-section" id="section-brush">
+                <div class="sidebar-header">
+                    <svg class="arrow" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17 16.59 8.59 18 10l-6 6-6-6 1.41-1.41z"/></svg>
+                    <h3>Brush Tools</h3>
+                </div>
+                <div class="sidebar-content">
+                    <label for="brush-tool-select">Brush Tool:</label>
+                    <select id="brush-tool-select" class="select-css">
+                        <option value="pencil">Brush</option>
+                        <option value="square">Square</option>
+                        <option value="circle">Circle</option>
+                        <option value="bucket-area">Bucket (Area)</option>
+                        <option value="bucket-global">Bucket (Global)</option>
+                    </select>
+                    <label for="brush-size">Brush Size:</label>
+                    <input type="number" id="brush-size" value="1" min="1" class="input-css">
+                    <div class="button-group">
+                        <button id="undo-btn" class="btn" disabled>Undo</button>
+                        <button id="redo-btn" class="btn" disabled>Redo</button>
+                    </div>
+                    <button id="pan-mode-btn" class="btn">Pan Mode</button>
+                </div>
             </div>
             
-            <div class="sidebar-section">
-                <h3>Text Tool</h3>
-                <label for="text-input">Text:</label>
-                <input type="text" id="text-input" class="input-css" placeholder="Enter text...">
-                <label for="text-size-input">Text Size:</label>
-                <input type="number" id="text-size-input" value="1" min="1" max="5" class="input-css">
-                <button id="place-text-btn" class="btn">Add Text</button>
-            </div>
-
-            <div class="sidebar-section">
-                <h3>Pattern Fill</h3>
-                <p class="description">Fill the background with a random geometric pattern. This feature works completely offline.</p>
-                <button id="generate-bg-btn" class="btn">Generate Background</button>
-                <button id="stroke-selection-btn" class="btn">Stroke Selection</button>
-            </div>
-
-            <div class="sidebar-section">
-                <h3>Export</h3>
-                <div class="button-group">
-                    <button id="save-project-btn" class="btn">Save Project</button>
+            <div class="sidebar-section" id="section-text">
+                <div class="sidebar-header">
+                    <svg class="arrow" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17 16.59 8.59 18 10l-6 6-6-6 1.41-1.41z"/></svg>
+                    <h3>Text Tool</h3>
                 </div>
-                 <div class="button-group">
-                    <button id="download-btn" class="btn">Download PNG</button>
-                    <button id="download-svg-btn" class="btn">Download SVG</button>
+                <div class="sidebar-content">
+                    <label for="text-input">Text:</label>
+                    <input type="text" id="text-input" class="input-css" placeholder="Enter text...">
+                    <label for="text-size-input">Text Size:</label>
+                    <input type="number" id="text-size-input" value="1" min="1" max="5" class="input-css">
+                    <button id="place-text-btn" class="btn">Add Text</button>
+                </div>
+            </div>
+
+            <div class="sidebar-section" id="section-pattern">
+                 <div class="sidebar-header">
+                    <svg class="arrow" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17 16.59 8.59 18 10l-6 6-6-6 1.41-1.41z"/></svg>
+                    <h3>Pattern Fill</h3>
+                </div>
+                <div class="sidebar-content">
+                    <p class="description">Fill the background with a random geometric pattern. This feature works completely offline.</p>
+                    <button id="generate-bg-btn" class="btn">Generate Background</button>
+                    <button id="stroke-selection-btn" class="btn">Stroke Selection</button>
+                </div>
+            </div>
+
+            <div class="sidebar-section" id="section-export">
+                 <div class="sidebar-header">
+                    <svg class="arrow" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17 16.59 8.59 18 10l-6 6-6-6 1.41-1.41z"/></svg>
+                    <h3>Export</h3>
+                </div>
+                <div class="sidebar-content">
+                    <div class="button-group">
+                        <button id="save-project-btn" class="btn">Save Project</button>
+                    </div>
+                    <div class="button-group">
+                        <button id="download-btn" class="btn">Download PNG</button>
+                        <button id="download-svg-btn" class="btn">Download SVG</button>
+                    </div>
                 </div>
             </div>
         </aside>
 
         <main class="main-content">
-            <div class="canvas-wrapper">
-                <canvas id="pixel-canvas"></canvas>
+            <div class="artboard-container">
+                <div class="ruler-corner"></div>
+                <canvas id="top-ruler" class="ruler"></canvas>
+                <canvas id="left-ruler" class="ruler"></canvas>
+                <div class="canvas-wrapper">
+                    <canvas id="pixel-canvas"></canvas>
+                    <canvas id="overlay-canvas"></canvas>
+                </div>
             </div>
-             <div class="bottom-controls">
+            <div class="bottom-controls">
                 <div class="canvas-preview-wrapper preview-box">
                     <p>Canvas Preview</p>
                     <canvas id="canvas-preview"></canvas>
