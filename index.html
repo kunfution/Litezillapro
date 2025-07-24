@@ -14,7 +14,12 @@
 <body>
     <div class="app-container">
         <aside class="sidebar">
-            <h2 class="sidebar-title">Pixel Art Creator</h2>
+            <a href="https://litezilla.com/" target="_blank" rel="noopener noreferrer" class="sidebar-logo-link">
+                <div class="logo-container">
+                    <img src="https://i.ibb.co/W4WRVhy1/off.png" alt="LiteZilla Logo" class="sidebar-logo logo-off-state">
+                    <img src="https://i.ibb.co/jPTt2wND/on.png" alt="LiteZilla Logo Hover" class="sidebar-logo logo-on-state">
+                </div>
+            </a>
 
             <div class="sidebar-section" id="section-image">
                 <div class="sidebar-header">
@@ -38,6 +43,13 @@
                         <span id="color-detail-value">16</span>
                     </div>
                     <input type="range" id="color-detail-slider" min="2" max="16" step="1" value="16" disabled>
+                    
+                    <div class="label-with-value" style="margin-top: 15px;">
+                        <label for="refine-strength-slider">Simplify:</label>
+                        <span id="refine-strength-value">1</span>
+                    </div>
+                    <input type="range" id="refine-strength-slider" min="1" max="4" step="1" value="1" disabled>
+                    <button id="apply-refinement-btn" class="btn" style="margin-top: 10px;" disabled>Apply Simplification</button>
                 </div>
             </div>
 
@@ -56,6 +68,10 @@
                     </div>
                     <label for="overlay-opacity-slider">Opacity:</label>
                     <input type="range" id="overlay-opacity-slider" min="0" max="1" step="0.01" value="0.5" disabled>
+                    <div class="button-group">
+                        <button id="adjust-overlay-btn" class="btn" disabled>Adjust Overlay</button>
+                        <button id="fit-to-grid-btn" class="btn" disabled>Fit to Grid</button>
+                    </div>
                     <button id="clear-overlay-btn" class="btn" style="margin-top: 10px;" disabled>Clear Overlay</button>
                 </div>
             </div>
@@ -137,11 +153,11 @@
                 </div>
                 <div class="sidebar-content">
                     <div class="button-group">
-                        <button id="save-project-btn" class="btn">Save Project</button>
+                        <button id="save-project-btn" class="btn" disabled>Save Project</button>
                     </div>
                     <div class="button-group">
-                        <button id="download-btn" class="btn">Download PNG</button>
-                        <button id="download-svg-btn" class="btn">Download SVG</button>
+                        <button id="download-btn" class="btn" disabled>Download PNG</button>
+                        <button id="download-svg-btn" class="btn" disabled>Download SVG</button>
                     </div>
                 </div>
             </div>

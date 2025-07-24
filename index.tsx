@@ -1,5 +1,6 @@
 
 
+
 // --- TYPE DEFINITIONS for File System Access API ---
 // These interfaces are added to provide type safety for a modern browser API
 // without causing errors in environments that don't have up-to-date TS DOM libs.
@@ -152,6 +153,9 @@ const scaleSlider = document.getElementById('scale-slider') as HTMLInputElement;
 const scaleValueSpan = document.getElementById('scale-value') as HTMLSpanElement;
 const colorDetailSlider = document.getElementById('color-detail-slider') as HTMLInputElement;
 const colorDetailValueSpan = document.getElementById('color-detail-value') as HTMLSpanElement;
+const refineStrengthSlider = document.getElementById('refine-strength-slider') as HTMLInputElement;
+const refineStrengthValue = document.getElementById('refine-strength-value') as HTMLSpanElement;
+const applyRefinementBtn = document.getElementById('apply-refinement-btn') as HTMLButtonElement;
 const panModeBtn = document.getElementById('pan-mode-btn') as HTMLButtonElement;
 const brushToolSelect = document.getElementById('brush-tool-select') as HTMLSelectElement;
 const brushSizeInput = document.getElementById('brush-size') as HTMLInputElement;
@@ -175,6 +179,8 @@ const overlayUploadInput = document.getElementById('overlay-upload-input') as HT
 const overlayFileNameSpan = document.querySelector('.overlay-file-name') as HTMLSpanElement;
 const overlayOpacitySlider = document.getElementById('overlay-opacity-slider') as HTMLInputElement;
 const clearOverlayBtn = document.getElementById('clear-overlay-btn') as HTMLButtonElement;
+const fitToGridBtn = document.getElementById('fit-to-grid-btn') as HTMLButtonElement;
+const adjustOverlayBtn = document.getElementById('adjust-overlay-btn') as HTMLButtonElement;
 const overlayCanvas = document.getElementById('overlay-canvas') as HTMLCanvasElement;
 const overlayCtx = overlayCanvas.getContext('2d');
 
@@ -213,6 +219,14 @@ let dragStart = { x: 0, y: 0 }; // For panning gesture origin
 let isTextPlacementMode = false;
 let hoveredCoords: { x: number; y: number } | null = null; // For ruler highlighting
 
+// Overlay manipulation state
+let isAdjustingOverlay = false;
+let isMovingOverlay = false;
+let isResizingOverlay = false;
+let resizeHandle: string | null = null;
+let overlayDragStart = { x: 0, y: 0 };
+let overlayStartRect = { artboardX: 0, artboardY: 0, widthInCells: 0, heightInCells: 0 };
+
 
 // --- CORE FUNCTIONS ---
 
@@ -225,6 +239,8 @@ function init() {
     saveProjectBtn.addEventListener('click', handleSaveProject);
     scaleSlider.addEventListener('input', handleScaleChange);
     colorDetailSlider.addEventListener('input', handleColorDetailChange);
+    applyRefinementBtn.addEventListener('click', handleApplyRefinement);
+    refineStrengthSlider.addEventListener('input', updateSliderValues);
     panModeBtn.addEventListener('click', togglePanMode);
     generateBgBtn.addEventListener('click', handleGenerateBackground);
     strokeSelectionBtn.addEventListener('click', handleStrokeSelection);
@@ -235,6 +251,9 @@ function init() {
     overlayUploadInput.addEventListener('change', handleOverlayUpload);
     overlayOpacitySlider.addEventListener('input', handleOverlayOpacityChange);
     clearOverlayBtn.addEventListener('click', handleClearOverlay);
+    fitToGridBtn.addEventListener('click', handleFitToGrid);
+    adjustOverlayBtn.addEventListener('click', handleToggleAdjustOverlay);
+
 
     // Brush tool listeners
     brushToolSelect.addEventListener('change', handleToolChange);
@@ -246,6 +265,12 @@ function init() {
     canvas.addEventListener('mousemove', handleMouseMove);
     canvas.addEventListener('mouseup', handleMouseUp);
     canvas.addEventListener('mouseleave', handleMouseLeave);
+
+    // Overlay manipulation listeners
+    overlayCanvas.addEventListener('mousedown', handleOverlayMouseDown);
+    overlayCanvas.addEventListener('mousemove', handleOverlayMouseMove);
+    overlayCanvas.addEventListener('mouseleave', handleOverlayMouseLeave);
+
 
     // Hotkey Popover Listeners
     hotkeyHelpBtn.addEventListener('click', (e) => {
@@ -281,6 +306,7 @@ function init() {
     updateGridSize();
     updateColorPalette();
     updateUndoRedoButtons();
+    updateControlStates();
     handleToolChange(); // Set initial tool state
     renderCanvas();
 }
@@ -448,6 +474,30 @@ function renderOverlay(spacing: number, panPreviewX: number, panPreviewY: number
         screenHeight
     );
     overlayCtx.globalAlpha = 1.0; // Reset alpha
+
+    // Draw resize handles only if in adjust mode
+    if (isAdjustingOverlay) {
+        overlayCtx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+        overlayCtx.fillStyle = 'rgba(0, 122, 204, 0.8)';
+        overlayCtx.lineWidth = 1.5;
+
+        const handleSize = 10;
+        const handles = {
+            'top-left':     { x: screenX, y: screenY },
+            'top':          { x: screenX + screenWidth / 2, y: screenY },
+            'top-right':    { x: screenX + screenWidth, y: screenY },
+            'left':         { x: screenX, y: screenY + screenHeight / 2 },
+            'right':        { x: screenX + screenWidth, y: screenY + screenHeight / 2 },
+            'bottom-left':  { x: screenX, y: screenY + screenHeight },
+            'bottom':       { x: screenX + screenWidth / 2, y: screenY + screenHeight },
+            'bottom-right': { x: screenX + screenWidth, y: screenY + screenHeight },
+        };
+
+        for (const pos of Object.values(handles)) {
+            overlayCtx.fillRect(pos.x - handleSize/2, pos.y - handleSize/2, handleSize, handleSize);
+            overlayCtx.strokeRect(pos.x - handleSize/2, pos.y - handleSize/2, handleSize, handleSize);
+        }
+    }
 }
 
 
@@ -780,6 +830,8 @@ function handleOverlayUpload(event: Event) {
             overlayFileNameSpan.textContent = file.name;
             overlayOpacitySlider.disabled = false;
             clearOverlayBtn.disabled = false;
+            fitToGridBtn.disabled = false;
+            adjustOverlayBtn.disabled = false;
             renderCanvas();
         };
         img.onerror = () => {
@@ -809,6 +861,20 @@ function handleClearOverlay() {
     }
     overlayOpacitySlider.disabled = true;
     clearOverlayBtn.disabled = true;
+    fitToGridBtn.disabled = true;
+    adjustOverlayBtn.disabled = true;
+    if (isAdjustingOverlay) {
+        handleToggleAdjustOverlay(); // Turn off adjust mode if it was on
+    }
+    renderCanvas();
+}
+
+function handleFitToGrid() {
+    if (!overlayImage) return;
+    overlayImage.artboardX = artboardOffset.x;
+    overlayImage.artboardY = artboardOffset.y;
+    overlayImage.widthInCells = gridWidth;
+    overlayImage.heightInCells = gridHeight;
     renderCanvas();
 }
 
@@ -895,6 +961,7 @@ function handleImageUpload(event: Event) {
                 updateTransformControlsState(false);
                 updateSliderValues();
                 resetHistory();
+                updateControlStates();
                 renderCanvas();
                 
             } catch (error) {
@@ -947,6 +1014,7 @@ function handleSizeChange() {
     updateTransformControlsState(false);
     updateSliderValues();
     resetHistory();
+    updateControlStates();
     renderCanvas();
 }
 
@@ -1003,6 +1071,9 @@ function handleMouseMove(event: MouseEvent) {
 function handleMouseUp() {
     if (isPanMode && isDragging) {
         handlePanEnd();
+    }
+    if (isDrawing) {
+        updateControlStates();
     }
     isDrawing = false;
     renderCanvas(); // Redraw to show brush preview again if mouse is over canvas
@@ -1110,7 +1181,7 @@ function generateVerticalBands(grid: string[][]) {
     const numBands = Math.floor(Math.random() * 5) + 2;
     let x = 0;
     while (x < gridWidth) {
-        const bandWidth = Math.floor(Math.random() * (gridWidth / numBands)) + 1;
+        const bandWidth = Math.floor(Math.random() * (gridWidth / numBands)) + 2;
         const color = LIMITED_PALETTE[Math.floor(Math.random() * LIMITED_PALETTE.length)];
         for (let i = x; i < x + bandWidth && i < gridWidth; i++) {
             for (let y = 0; y < gridHeight; y++) {
@@ -1372,6 +1443,7 @@ function handleGenerateBackground() {
                         setPixel(x + artboardOffset.x, y + artboardOffset.y, newPattern[y][x]);
                     }
                 }
+                updateControlStates();
             }
 
             renderCanvas();
@@ -1386,6 +1458,169 @@ function handleGenerateBackground() {
         generateBgBtn.textContent = originalBtnText;
     }
 }
+
+function handleApplyRefinement() {
+    if (pixelData.size === 0) {
+        alert("Nothing to refine. Create some art first!");
+        return;
+    }
+    cancelTextPlacementMode();
+    saveState();
+    commitGeneratedBackground();
+    const strength = parseInt(refineStrengthSlider.value, 10);
+    applyPostProcessing(strength);
+    renderCanvas();
+    updateControlStates();
+}
+
+/**
+ * A multi-level post-processing function designed to clean and define shapes.
+ * This replaces simpler filters to better preserve and contour the artwork.
+ * @param strength - The level of refinement to apply (1=gentle, 4=aggressive).
+ */
+function applyPostProcessing(strength: number) {
+    if (strength < 1) return;
+
+    let tempPixelData = new Map(pixelData);
+
+    // --- Helper Functions ---
+    const getArtboardBounds = (data: Map<string, string>) => {
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        if (data.size === 0) return { minX: 0, minY: 0, maxX: -1, maxY: -1 }; // Return invalid range if empty
+        for (const key of data.keys()) {
+            const [x, y] = key.split(',').map(Number);
+            if (x < minX) minX = x;
+            if (y < minY) minY = y;
+            if (x > maxX) maxX = x;
+            if (y > maxY) maxY = y;
+        }
+        return { minX, minY, maxX, maxY };
+    };
+
+    const findMajorityColor = (colors: string[]) => {
+        const colorCounts: { [color: string]: number } = {};
+        let maxCount = 0;
+        let majorityColor: string | null = null;
+        for (const color of colors) {
+            if (color === '#ffffff' || color === MASK_COLOR) continue;
+            colorCounts[color] = (colorCounts[color] || 0) + 1;
+            if (colorCounts[color] > maxCount) {
+                maxCount = colorCounts[color];
+                majorityColor = color;
+            } else if (colorCounts[color] === maxCount) {
+                 // In a tie, don't declare a majority to prevent ambiguous changes.
+                majorityColor = null;
+            }
+        }
+        return majorityColor;
+    };
+    
+    const applyChangesToMap = (data: Map<string, string>, changes: Map<string, string>) => {
+        for (const [key, color] of changes.entries()) {
+            if (color === '#ffffff') {
+                data.delete(key);
+            } else {
+                data.set(key, color);
+            }
+        }
+    };
+
+    // --- Levels 1 & 2: Noise Removal and Gap Filling ---
+    // These levels perform a gentle cleanup, preserving major shapes.
+    // They are not applied at higher levels to avoid interfering with the contouring algorithm.
+    if (strength >= 1 && strength <= 2) {
+        const changes = new Map<string, string>();
+        const bounds = getArtboardBounds(tempPixelData);
+
+        // Iterate a bit beyond the bounds to correctly handle edges.
+        for (let y = bounds.minY - 1; y <= bounds.maxY + 1; y++) {
+            for (let x = bounds.minX - 1; x <= bounds.maxX + 1; x++) {
+                const key = `${x},${y}`;
+                const originalColor = tempPixelData.get(key) || '#ffffff';
+                
+                // Get cardinal and diagonal neighbors
+                const N  = tempPixelData.get(`${x},${y-1}`) || '#ffffff';
+                const S  = tempPixelData.get(`${x},${y+1}`) || '#ffffff';
+                const W  = tempPixelData.get(`${x-1},${y}`) || '#ffffff';
+                const E  = tempPixelData.get(`${x+1},${y}`) || '#ffffff';
+                const allNeighbors = [
+                     tempPixelData.get(`${x-1},${y-1}`) || '#ffffff', N, tempPixelData.get(`${x+1},${y-1}`) || '#ffffff',
+                     W,                                                E,
+                     tempPixelData.get(`${x-1},${y+1}`) || '#ffffff', S, tempPixelData.get(`${x+1},${y+1}`) || '#ffffff',
+                ];
+
+                if (originalColor === '#ffffff' || originalColor === MASK_COLOR) {
+                    // Rule: Fill 1-pixel gaps to connect broken lines.
+                    if (N && N === S && N !== '#ffffff' && N !== MASK_COLOR) {
+                        changes.set(key, N);
+                        continue; 
+                    }
+                     if (W && W === E && W !== '#ffffff' && W !== MASK_COLOR) {
+                        changes.set(key, W);
+                        continue;
+                    }
+
+                } else {
+                    // Rule: Remove "orphan" pixels that are disconnected from their color group.
+                    const sameColorNeighbors = allNeighbors.filter(c => c === originalColor).length;
+                    if (sameColorNeighbors <= 1) { // 1 or 0 neighbors.
+                        const majority = findMajorityColor(allNeighbors);
+                        if (majority && majority !== originalColor) {
+                            changes.set(key, majority);
+                        }
+                    }
+                }
+            }
+        }
+        applyChangesToMap(tempPixelData, changes);
+    }
+
+    // --- Levels 3 & 4: Shape Contouring ---
+    // This algorithm analyzes 2x2 blocks to smooth and define contours,
+    // fixing jagged lines and solidifying shapes.
+    if (strength >= 3) {
+        const passes = strength === 4 ? 2 : 1; // Level 4 is more aggressive and runs twice.
+        for (let p = 0; p < passes; p++) {
+            const changes = new Map<string, string>();
+            const bounds = getArtboardBounds(tempPixelData);
+
+            // Iterate through the artboard to find 2x2 blocks to process.
+            for (let y = bounds.minY; y <= bounds.maxY; y++) {
+                for (let x = bounds.minX; x <= bounds.maxX; x++) {
+                    const blockKeys = [`${x},${y}`, `${x + 1},${y}`, `${x},${y + 1}`, `${x + 1},${y + 1}`];
+                    const blockColors = blockKeys.map(k => tempPixelData.get(k) || '#ffffff');
+                    
+                    const colorCounts: { [color: string]: number } = {};
+                    let dominantColor: string | null = null;
+                    let dominantCount = 0;
+
+                    for (const color of blockColors) {
+                        if (color === '#ffffff' || color === MASK_COLOR) continue;
+                        colorCounts[color] = (colorCounts[color] || 0) + 1;
+                        if (colorCounts[color] > dominantCount) {
+                            dominantCount = colorCounts[color];
+                            dominantColor = color;
+                        }
+                    }
+
+                    // Rule: If one color is dominant (3 out of 4 pixels), consolidate the block.
+                    if (dominantCount === 3 && dominantColor) {
+                        for (let i = 0; i < blockColors.length; i++) {
+                            if (blockColors[i] !== dominantColor) {
+                                changes.set(blockKeys[i], dominantColor);
+                            }
+                        }
+                    }
+                }
+            }
+            applyChangesToMap(tempPixelData, changes);
+        }
+    }
+    
+    // Commit final changes to the main pixelData
+    pixelData = tempPixelData;
+}
+
 
 function handleStrokeSelection() {
     cancelTextPlacementMode();
@@ -1440,6 +1675,7 @@ function handleStrokeSelection() {
     }
 
     renderCanvas();
+    updateControlStates();
 }
 
 
@@ -1496,6 +1732,7 @@ function drawTextAt(startX: number, startY: number) {
     }
 
     renderCanvas();
+    updateControlStates();
 }
 
 
@@ -1856,6 +2093,7 @@ function handleUndo() {
 
     renderCanvas();
     updateUndoRedoButtons();
+    updateControlStates();
 }
 
 function handleRedo() {
@@ -1877,6 +2115,7 @@ function handleRedo() {
     artboardOffset = { ...nextState.artboardOffset };
     renderCanvas();
     updateUndoRedoButtons();
+    updateControlStates();
 }
 
 
@@ -2001,7 +2240,193 @@ function floodFill(startX: number, startY: number) {
     }
 }
 
+// --- OVERLAY MANIPULATION ---
+
+function handleToggleAdjustOverlay() {
+    isAdjustingOverlay = !isAdjustingOverlay;
+    adjustOverlayBtn.classList.toggle('active', isAdjustingOverlay);
+    overlayCanvas.style.pointerEvents = isAdjustingOverlay ? 'auto' : 'none';
+
+    // When turning off adjust mode, reset the cursor just in case it was stuck
+    if (!isAdjustingOverlay) {
+        overlayCanvas.style.cursor = 'default';
+    }
+    renderCanvas(); // Redraw to show/hide handles
+}
+
+function getOverlayBoundsInPixels(spacing: number) {
+    if (!overlayImage) return null;
+    const screenX = (overlayImage.artboardX - artboardOffset.x) * spacing;
+    const screenY = (overlayImage.artboardY - artboardOffset.y) * spacing;
+    const screenWidth = overlayImage.widthInCells * spacing;
+    const screenHeight = overlayImage.heightInCells * spacing;
+    return { x: screenX, y: screenY, width: screenWidth, height: screenHeight };
+}
+
+function getResizeHandleAt(mouseX: number, mouseY: number, spacing: number): string | null {
+    const bounds = getOverlayBoundsInPixels(spacing);
+    if (!bounds) return null;
+
+    const { x, y, width, height } = bounds;
+    const handleSize = 12; // A slightly larger hit area than visual size
+
+    const handles = {
+        'top-left':     { x: x, y: y },
+        'top':          { x: x + width / 2, y: y },
+        'top-right':    { x: x + width, y: y },
+        'left':         { x: x, y: y + height / 2 },
+        'right':        { x: x + width, y: y + height / 2 },
+        'bottom-left':  { x: x, y: y + height },
+        'bottom':       { x: x + width / 2, y: y + height },
+        'bottom-right': { x: x + width, y: y + height },
+    };
+
+    for (const [name, pos] of Object.entries(handles)) {
+        if (Math.abs(mouseX - pos.x) < handleSize / 2 && Math.abs(mouseY - pos.y) < handleSize / 2) {
+            return name;
+        }
+    }
+
+    return null;
+}
+
+const handleWindowMouseMove = (event: MouseEvent) => {
+    if (!overlayImage || !isAdjustingOverlay) return;
+    event.preventDefault(); // Prevent text selection, etc., during drag
+
+    const spacing = getSpacing();
+
+    if (isResizingOverlay && resizeHandle) {
+        const deltaX = (event.clientX - overlayDragStart.x) / spacing;
+        const deltaY = (event.clientY - overlayDragStart.y) / spacing;
+
+        let newX = overlayStartRect.artboardX;
+        let newY = overlayStartRect.artboardY;
+        let newW = overlayStartRect.widthInCells;
+        let newH = overlayStartRect.heightInCells;
+        
+        if (resizeHandle.includes('left')) {
+            newW -= deltaX;
+            newX += deltaX;
+        }
+        if (resizeHandle.includes('right')) {
+            newW += deltaX;
+        }
+        if (resizeHandle.includes('top')) {
+            newH -= deltaY;
+            newY += deltaY;
+        }
+        if (resizeHandle.includes('bottom')) {
+            newH += deltaY;
+        }
+
+        if (newW >= 1) {
+            overlayImage.widthInCells = newW;
+            overlayImage.artboardX = newX;
+        }
+        if (newH >= 1) {
+            overlayImage.heightInCells = newH;
+            overlayImage.artboardY = newY;
+        }
+        renderCanvas();
+
+    } else if (isMovingOverlay) {
+        const deltaX = (event.clientX - overlayDragStart.x) / spacing;
+        const deltaY = (event.clientY - overlayDragStart.y) / spacing;
+        overlayImage.artboardX = overlayStartRect.artboardX + deltaX;
+        overlayImage.artboardY = overlayStartRect.artboardY + deltaY;
+        renderCanvas();
+    }
+};
+
+const handleWindowMouseUp = () => {
+    isMovingOverlay = false;
+    isResizingOverlay = false;
+    resizeHandle = null;
+    // Clean up global listeners
+    window.removeEventListener('mousemove', handleWindowMouseMove);
+    window.removeEventListener('mouseup', handleWindowMouseUp);
+};
+
+function handleOverlayMouseDown(event: MouseEvent) {
+    if (!overlayImage || isPanMode || !isAdjustingOverlay) return;
+    event.stopPropagation();
+
+    const rect = overlayCanvas.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+
+    resizeHandle = getResizeHandleAt(mouseX, mouseY, getSpacing());
+
+    if (resizeHandle) {
+        isResizingOverlay = true;
+    } else {
+        const bounds = getOverlayBoundsInPixels(getSpacing());
+        if (bounds && mouseX > bounds.x && mouseX < bounds.x + bounds.width && mouseY > bounds.y && mouseY < bounds.y + bounds.height) {
+            isMovingOverlay = true;
+        }
+    }
+    
+    if (isResizingOverlay || isMovingOverlay) {
+        overlayDragStart = { x: event.clientX, y: event.clientY };
+        overlayStartRect = { ...overlayImage };
+        // Add window listeners to handle dragging outside the canvas
+        window.addEventListener('mousemove', handleWindowMouseMove);
+        window.addEventListener('mouseup', handleWindowMouseUp);
+    }
+}
+
+function handleOverlayMouseMove(event: MouseEvent) {
+    // This function is now ONLY for changing the cursor style on hover
+    if (!overlayImage || isPanMode || !isAdjustingOverlay || isMovingOverlay || isResizingOverlay) return;
+    event.stopPropagation();
+    
+    const rect = overlayCanvas.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+    const spacing = getSpacing();
+
+    const handle = getResizeHandleAt(mouseX, mouseY, spacing);
+    if (handle) {
+        if (handle.includes('top') || handle.includes('bottom')) {
+            overlayCanvas.style.cursor = 'ns-resize';
+        } else if (handle.includes('left') || handle.includes('right')) {
+            overlayCanvas.style.cursor = 'ew-resize';
+        }
+        if ((handle.includes('top') && handle.includes('left')) || (handle.includes('bottom') && handle.includes('right'))) {
+             overlayCanvas.style.cursor = 'nwse-resize';
+        }
+        if ((handle.includes('top') && handle.includes('right')) || (handle.includes('bottom') && handle.includes('left'))) {
+             overlayCanvas.style.cursor = 'nesw-resize';
+        }
+    } else {
+        const bounds = getOverlayBoundsInPixels(spacing);
+         if (bounds && mouseX > bounds.x && mouseX < bounds.x + bounds.width && mouseY > bounds.y && mouseY < bounds.y + bounds.height) {
+            overlayCanvas.style.cursor = 'move';
+        } else {
+            overlayCanvas.style.cursor = 'default';
+        }
+    }
+}
+
+function handleOverlayMouseLeave() {
+    // We only reset the cursor. The drag logic is handled by window events now.
+     overlayCanvas.style.cursor = 'default';
+}
+
 // --- HELPER FUNCTIONS ---
+
+/**
+ * Enables/disables main action buttons based on whether there's art on the canvas.
+ */
+function updateControlStates() {
+    const hasArt = pixelData.size > 0;
+    applyRefinementBtn.disabled = !hasArt;
+    refineStrengthSlider.disabled = !hasArt;
+    saveProjectBtn.disabled = !hasArt;
+    downloadBtn.disabled = !hasArt;
+    downloadSvgBtn.disabled = !hasArt;
+}
 
 function toggleTextPlacementMode() {
     isTextPlacementMode = !isTextPlacementMode;
@@ -2132,6 +2557,7 @@ function processImage() {
     }
     
     renderCanvas();
+    updateControlStates();
 }
 
 
@@ -2221,6 +2647,9 @@ function updateSliderValues() {
     }
     if (colorDetailValueSpan) {
         colorDetailValueSpan.textContent = colorDetailSlider.value;
+    }
+    if (refineStrengthValue) {
+        refineStrengthValue.textContent = refineStrengthSlider.value;
     }
 }
 

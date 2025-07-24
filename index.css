@@ -1,4 +1,5 @@
 
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
 
 :root {
@@ -44,11 +45,37 @@ body {
     border-right: 1px solid var(--border-color);
 }
 
-.sidebar-title {
-    font-size: 1.1rem;
-    font-weight: 500;
+.sidebar-logo-link {
+    display: block;
     padding: 10px 5px;
     margin-bottom: 5px;
+    text-align: center;
+}
+
+.logo-container {
+    display: grid; /* Use grid for robust layering */
+    place-items: center;
+    line-height: 0;
+}
+
+/* Place both logo states in the same grid cell for perfect alignment */
+.logo-container .sidebar-logo {
+    grid-area: 1 / 1;
+}
+
+.logo-container .logo-on-state {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.logo-container:hover .logo-on-state {
+    opacity: 1;
+}
+
+.sidebar-logo {
+    max-width: 90%;
+    height: auto;
+    vertical-align: middle;
 }
 
 .sidebar-section {
