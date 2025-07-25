@@ -1,6 +1,4 @@
 
-
-
 // --- TYPE DEFINITIONS for File System Access API ---
 // These interfaces are added to provide type safety for a modern browser API
 // without causing errors in environments that don't have up-to-date TS DOM libs.
@@ -136,6 +134,7 @@ const PIXEL_FONT: { [key: string]: number[][] } = {
 
 
 // --- DOM ELEMENTS ---
+const newProjectBtn = document.getElementById('new-project-btn') as HTMLButtonElement;
 const uploadInput = document.getElementById('upload-input') as HTMLInputElement;
 const fileBtn = document.querySelector('.file-btn') as HTMLButtonElement;
 const fileNameSpan = document.querySelector('.file-name') as HTMLSpanElement;
@@ -178,11 +177,15 @@ const leftRulerCtx = leftRulerCanvas.getContext('2d');
 const overlayUploadInput = document.getElementById('overlay-upload-input') as HTMLInputElement;
 const overlayFileNameSpan = document.querySelector('.overlay-file-name') as HTMLSpanElement;
 const overlayOpacitySlider = document.getElementById('overlay-opacity-slider') as HTMLInputElement;
-const clearOverlayBtn = document.getElementById('clear-overlay-btn') as HTMLButtonElement;
+const toggleOverlayBtn = document.getElementById('toggle-overlay-btn') as HTMLButtonElement;
 const fitToGridBtn = document.getElementById('fit-to-grid-btn') as HTMLButtonElement;
 const adjustOverlayBtn = document.getElementById('adjust-overlay-btn') as HTMLButtonElement;
 const overlayCanvas = document.getElementById('overlay-canvas') as HTMLCanvasElement;
 const overlayCtx = overlayCanvas.getContext('2d');
+const saveConfirmModal = document.getElementById('save-confirm-modal') as HTMLDivElement;
+const modalSaveBtn = document.getElementById('modal-save-btn') as HTMLButtonElement;
+const modalDontSaveBtn = document.getElementById('modal-dont-save-btn') as HTMLButtonElement;
+const modalCancelBtn = document.getElementById('modal-cancel-btn') as HTMLButtonElement;
 
 
 // --- APP STATE ---
@@ -205,6 +208,7 @@ let overlayImage: {
     widthInCells: number;
     heightInCells: number;
     opacity: number;
+    isVisible: boolean;
 } | null = null;
 
 
@@ -225,12 +229,13 @@ let isMovingOverlay = false;
 let isResizingOverlay = false;
 let resizeHandle: string | null = null;
 let overlayDragStart = { x: 0, y: 0 };
-let overlayStartRect = { artboardX: 0, artboardY: 0, widthInCells: 0, heightInCells: 0 };
+let overlayStartRect = { artboardX: 0, artboardY: 0, widthInCells: 0, heightInCells: 0, isVisible: true, opacity: 0, image: new Image() };
 
 
 // --- CORE FUNCTIONS ---
 
 function init() {
+    newProjectBtn.addEventListener('click', handleNewProject);
     fileBtn.addEventListener('click', () => uploadInput.click());
     uploadInput.addEventListener('change', handleImageUpload);
     sizeSelect.addEventListener('change', handleSizeChange);
@@ -250,10 +255,26 @@ function init() {
     // Overlay Listeners
     overlayUploadInput.addEventListener('change', handleOverlayUpload);
     overlayOpacitySlider.addEventListener('input', handleOverlayOpacityChange);
-    clearOverlayBtn.addEventListener('click', handleClearOverlay);
+    toggleOverlayBtn.addEventListener('click', handleToggleOverlayVisibility);
     fitToGridBtn.addEventListener('click', handleFitToGrid);
     adjustOverlayBtn.addEventListener('click', handleToggleAdjustOverlay);
 
+    // Modal Listeners
+    modalSaveBtn.addEventListener('click', async () => {
+        await handleSaveProject(); // Let user save or cancel
+        resetProject();
+        hideSaveConfirmModal();
+    });
+    modalDontSaveBtn.addEventListener('click', () => {
+        resetProject();
+        hideSaveConfirmModal();
+    });
+    modalCancelBtn.addEventListener('click', hideSaveConfirmModal);
+    saveConfirmModal.addEventListener('click', (e) => {
+        if (e.target === saveConfirmModal) {
+            hideSaveConfirmModal();
+        }
+    });
 
     // Brush tool listeners
     brushToolSelect.addEventListener('change', handleToolChange);
@@ -454,7 +475,7 @@ function renderOverlay(spacing: number, panPreviewX: number, panPreviewY: number
     if (!overlayCtx) return;
     
     overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-    if (!overlayImage) return;
+    if (!overlayImage || !overlayImage.isVisible) return;
 
     // Top-left corner of the overlay image in screen pixels, relative to the canvas
     const screenX = (overlayImage.artboardX - (artboardOffset.x - panPreviewX)) * spacing;
@@ -740,9 +761,73 @@ function drawDot(
 
 // --- EVENT HANDLERS ---
 
+function handleNewProject() {
+    // If there's no work on the canvas, reset immediately.
+    if (pixelData.size === 0) {
+        resetProject();
+        return;
+    }
+
+    // If there is work, show the confirmation modal.
+    showSaveConfirmModal();
+}
+
+function resetProject() {
+    cancelTextPlacementMode();
+    
+    // Clear main data
+    pixelData.clear();
+    generatedBackgroundData = null;
+    
+    // Reset history
+    resetHistory();
+
+    // Reset file/image state
+    originalImage = null;
+    originalImagePreview.classList.add('hidden');
+    sourceImageEl.src = '';
+    fileNameSpan.textContent = 'No file chosen...';
+    uploadInput.value = '';
+
+    // Reset tracing overlay
+    handleClearOverlay();
+
+    // Reset transforms and viewport
+    resetTransforms();
+    
+    // Reset UI controls to their default state
+    scaleSlider.value = '1';
+    colorDetailSlider.value = '16';
+    refineStrengthSlider.value = '1';
+    sizeSelect.value = '51x26'; // Default size
+    textInput.value = '';
+    textSizeInput.value = '1';
+    
+    // Apply changes from UI controls
+    updateGridSize();
+    updateTransformControlsState(false);
+    updateSliderValues();
+    
+    // Toggle off optional modes
+    if (isGlowEnabled) {
+        toggleLightEffect();
+    }
+    
+    // Update button states
+    updateControlStates();
+    
+    // Final render
+    renderCanvas();
+}
+
 function handleHotkeys(event: KeyboardEvent) {
-    // Handle Esc key to close popover
+    // Handle Esc key to close popover or modal
     if (event.key === 'Escape') {
+        if (!saveConfirmModal.classList.contains('hidden')) {
+            hideSaveConfirmModal();
+            event.preventDefault();
+            return;
+        }
         if (!hotkeyPopover.classList.contains('hidden')) {
             hotkeyPopover.classList.add('hidden');
             hotkeyHelpBtn.classList.remove('active');
@@ -751,9 +836,9 @@ function handleHotkeys(event: KeyboardEvent) {
         }
     }
 
-    // Don't trigger hotkeys if user is typing in an input field
+    // Don't trigger hotkeys if user is typing in an input field or modal is open
     const target = event.target as HTMLElement;
-    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || !saveConfirmModal.classList.contains('hidden')) {
         return;
     }
 
@@ -825,11 +910,13 @@ function handleOverlayUpload(event: Event) {
                 artboardY: artboardOffset.y,
                 widthInCells: gridWidth,
                 heightInCells: gridHeight,
-                opacity: parseFloat(overlayOpacitySlider.value)
+                opacity: parseFloat(overlayOpacitySlider.value),
+                isVisible: true
             };
             overlayFileNameSpan.textContent = file.name;
             overlayOpacitySlider.disabled = false;
-            clearOverlayBtn.disabled = false;
+            toggleOverlayBtn.disabled = false;
+            toggleOverlayBtn.textContent = 'Hide Overlay';
             fitToGridBtn.disabled = false;
             adjustOverlayBtn.disabled = false;
             renderCanvas();
@@ -853,6 +940,13 @@ function handleOverlayOpacityChange(event: Event) {
     renderCanvas();
 }
 
+function handleToggleOverlayVisibility() {
+    if (!overlayImage) return;
+    overlayImage.isVisible = !overlayImage.isVisible;
+    toggleOverlayBtn.textContent = overlayImage.isVisible ? 'Hide Overlay' : 'Show Overlay';
+    renderCanvas();
+}
+
 function handleClearOverlay() {
     overlayImage = null;
     overlayUploadInput.value = '';
@@ -860,7 +954,8 @@ function handleClearOverlay() {
         overlayFileNameSpan.textContent = 'No file chosen...';
     }
     overlayOpacitySlider.disabled = true;
-    clearOverlayBtn.disabled = true;
+    toggleOverlayBtn.disabled = true;
+    toggleOverlayBtn.textContent = 'Hide Overlay';
     fitToGridBtn.disabled = true;
     adjustOverlayBtn.disabled = true;
     if (isAdjustingOverlay) {
@@ -966,7 +1061,7 @@ function handleImageUpload(event: Event) {
                 
             } catch (error) {
                 console.error("Error loading project file:", error);
-                alert("Could not load project file. It may be corrupt or in the wrong format.");
+                alert("Could not load project file. It may be be corrupt or in the wrong format.");
                 fileNameSpan.textContent = "Error loading project.";
             }
         };
@@ -2415,6 +2510,15 @@ function handleOverlayMouseLeave() {
 }
 
 // --- HELPER FUNCTIONS ---
+
+function showSaveConfirmModal() {
+    saveConfirmModal.classList.remove('hidden');
+}
+
+function hideSaveConfirmModal() {
+    saveConfirmModal.classList.add('hidden');
+}
+
 
 /**
  * Enables/disables main action buttons based on whether there's art on the canvas.
