@@ -1,4 +1,5 @@
 
+
 // --- TYPE DEFINITIONS for File System Access API ---
 // These interfaces are added to provide type safety for a modern browser API
 // without causing errors in environments that don't have up-to-date TS DOM libs.
@@ -1098,18 +1099,26 @@ function handleImageUpload(event: Event) {
 
 function handleSizeChange() {
     cancelTextPlacementMode();
+    saveState(); // Save the current artwork so the resize is undoable.
+
     updateGridSize();
-    pixelData.clear();
-    generatedBackgroundData = null; // Clear temp background
+
+    // The main pixelData is preserved, but we clear related states
+    // that are dependent on the old size or are part of the image import flow.
+    generatedBackgroundData = null; // Clear temp background as it's size-dependent
     originalImage = null;
     originalImagePreview.classList.add('hidden');
     fileNameSpan.textContent = 'No file chosen...';
     uploadInput.value = ''; // Reset file input
-    resetTransforms();
-    updateTransformControlsState(false);
-    updateSliderValues();
-    resetHistory();
-    updateControlStates();
+
+    resetTransforms(); // Reset pan/zoom and image scale to defaults
+    updateTransformControlsState(false); // Disable image controls since the source image is cleared
+    updateSliderValues(); // Update UI labels for sliders
+
+    // By not clearing pixelData, the user's work is kept.
+    // By not resetting history, the resize operation can be undone.
+
+    updateControlStates(); // Update enabled/disabled state of buttons
     renderCanvas();
 }
 
